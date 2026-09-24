@@ -1,0 +1,8 @@
+node_modules
+.next
+next-env.d.ts
+.DS_Store
+
+# Raw source footage: over GitHub's 100 MB limit; the site uses public/video/menu-water.mp4
+Inspiration/*.mp4
+tsconfig.tsbuildinfo

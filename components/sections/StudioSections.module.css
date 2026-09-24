@@ -1,0 +1,646 @@
+/*
+ * Mobile-first. Spacing runs on a 4px scale; tight steps bind related
+ * items (title + subline, number + label), generous steps separate groups.
+ */
+.wrap {
+  --sky: #c6def8;
+  --pink: #ff2e97;
+  --black: #000000;
+  --grid-line: color-mix(in srgb, var(--black) 13%, transparent);
+  --grid-size: 28px;
+
+  --ff-display: "Harber", var(--font-anton), sans-serif;
+  --ff-rough: "Early Edition JNL", var(--font-bebas), sans-serif;
+  --ff-text: var(--font-dosis), sans-serif;
+
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-s: 12px;
+  --space-m: 16px;
+  --space-l: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  --gutter: var(--space-xs);
+  --panel-pad: var(--space-l) var(--space-m);
+  --radius: 16px;
+  --radius-inner: 12px;
+  --tap: 44px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  display: grid;
+  gap: var(--space-2xl);
+  overflow-x: clip;
+  padding: var(--gutter);
+  padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right));
+  background: var(--sky);
+  color: var(--black);
+  font-family: var(--ff-text);
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wrap ::selection {
+  background: var(--black);
+  color: var(--pink);
+}
+
+/* ---------- Pink panel with print grid ---------- */
+
+.panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  padding: var(--panel-pad);
+  border-radius: var(--radius);
+  background-color: var(--pink);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  background-position: -1px -1px;
+}
+
+/* Out of flow so the canvas's pixel count can never feed back into layout. */
+.canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.media {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border: 2px solid var(--black);
+  border-radius: var(--radius-inner);
+  background: var(--black);
+}
+
+/* ---------- Type ---------- */
+
+.title {
+  position: relative;
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.display {
+  font-family: var(--ff-display);
+  font-size: clamp(3.75rem, 21vw, 10.5rem);
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+}
+
+.subline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2xs) 0.28em;
+  font-family: var(--ff-rough);
+  font-size: clamp(1.75rem, 7vw, 4.25rem);
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+}
+
+/* Comic speed lines: hidden until the entrance timeline draws them. */
+.speedlines {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  width: 190%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  visibility: hidden;
+  pointer-events: none;
+  stroke: var(--black);
+  stroke-linecap: round;
+}
+
+.display,
+.subline {
+  position: relative;
+  z-index: 1;
+}
+
+/* Skewed and drifted on every scroll frame: own compositor layers, so no repaint. */
+.display,
+.lead,
+.media,
+.cutout {
+  will-change: transform;
+}
+
+.chipWrap {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+}
+
+/* Starburst peeking out behind the tag: small enough to frame it, not cover the copy. */
+.burst {
+  position: absolute;
+  top: -40%;
+  left: -10%;
+  z-index: -1;
+  width: 120%;
+  height: 180%;
+  pointer-events: none;
+}
+
+.burstShape {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.burstShape svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: var(--sky);
+  stroke: var(--black);
+  stroke-width: 2px;
+  stroke-linejoin: round;
+}
+
+/* Black tag, like the city chip in the reference. */
+.chip {
+  position: relative;
+  display: inline-block;
+  padding: 0.08em 0.2em 0.02em;
+  border-radius: 0.14em;
+  background: var(--black);
+  color: var(--pink);
+}
+
+.lead {
+  margin: 0;
+  max-width: 22ch;
+  font-family: var(--ff-rough);
+  font-size: clamp(1.9rem, 7.4vw, 3.75rem);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.body {
+  max-width: 46ch;
+  font-size: clamp(1.0625rem, 0.95rem + 0.35vw, 1.25rem);
+  line-height: 1.25;
+  text-wrap: pretty;
+}
+
+/* ---------- Link ---------- */
+
+.link {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: var(--tap);
+  font-family: var(--ff-rough);
+  font-size: clamp(1.5rem, 1.2rem + 0.8vw, 2rem);
+  line-height: 1;
+  text-transform: uppercase;
+  background: linear-gradient(var(--black), var(--black)) no-repeat 0 calc(100% - 6px) / 100% 2px;
+  transition: background-size 500ms var(--ease-out);
+}
+
+/* The arrow pokes forward every few seconds, asking to be followed. */
+.link::after {
+  animation: poke 3.2s steps(1) infinite;
+  content: "";
+  width: 0.55em;
+  height: 0.55em;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  transition: transform 400ms var(--ease-out);
+}
+
+.link:active {
+  opacity: 0.7;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--black);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+@media (hover: hover) {
+  .link:hover {
+    background-size: 0 2px;
+    background-position: 100% calc(100% - 6px);
+  }
+
+  .link:hover::after {
+    transform: translateX(4px);
+  }
+
+  /* Hand-drawn wobble, held on twos. */
+  .link:hover {
+    animation: wobble 480ms steps(1) infinite;
+  }
+}
+
+@keyframes poke {
+  0%, 84%, 100% { translate: 0 0; }
+  87% { translate: 6px 0; }
+  90% { translate: 1px 0; }
+  93% { translate: 5px 0; }
+  96% { translate: 0 0; }
+}
+
+@keyframes wobble {
+  0% { rotate: -1.5deg; }
+  25% { rotate: 1deg; translate: 0 -1px; }
+  50% { rotate: -0.5deg; }
+  75% { rotate: 1.5deg; translate: 0 1px; }
+}
+
+/* ---------- Intro ---------- */
+
+.intro {
+  grid-template-areas:
+    "title"
+    "media"
+    "lede"
+    "link"
+    "stats";
+}
+
+.intro .title {
+  grid-area: title;
+}
+
+.intro .media {
+  grid-area: media;
+  margin-top: var(--space-l);
+}
+
+.lede {
+  grid-area: lede;
+  margin-top: var(--space-l);
+}
+
+.intro .link {
+  grid-area: link;
+  margin-top: var(--space-m);
+}
+
+/* Drag hint, after the reference's oval "View" badge. */
+.hint {
+  position: absolute;
+  left: 8%;
+  bottom: 10%;
+  padding: 0.3em 0.75em 0.2em;
+  border: 2px solid var(--pink);
+  border-radius: 50%;
+  background: var(--black);
+  color: var(--pink);
+  font-family: var(--ff-rough);
+  font-size: clamp(1.1rem, 0.9rem + 0.8vw, 1.6rem);
+  line-height: 1;
+  text-transform: uppercase;
+  rotate: -8deg;
+  pointer-events: none;
+  transition:
+    opacity 400ms var(--ease-out),
+    scale 400ms var(--ease-out);
+}
+
+.hint[data-hidden="true"] {
+  opacity: 0;
+  scale: 0.8;
+}
+
+.stats {
+  grid-area: stats;
+  display: grid;
+  gap: var(--space-xs);
+  margin: var(--space-xl) 0 0;
+  padding: var(--space-xs);
+  border: 2px solid var(--black);
+  border-radius: var(--radius-inner);
+  background: var(--sky);
+}
+
+.stat {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-s);
+}
+
+.statValue {
+  flex: none;
+  min-width: 2.1em;
+  margin: 0;
+  padding: 0.1em 0.2em 0;
+  border-radius: 8px;
+  background: var(--black);
+  color: var(--sky);
+  font-family: var(--ff-display);
+  font-size: 2.25rem;
+  line-height: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.statLabel {
+  font-family: var(--ff-rough);
+  font-size: 1.35rem;
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+/* ---------- About ---------- */
+
+.about {
+  grid-template-areas:
+    "lead"
+    "figure"
+    "columns"
+    "aside";
+}
+
+.about .lead {
+  grid-area: lead;
+}
+
+.figure {
+  grid-area: figure;
+  position: relative;
+  margin-top: var(--space-l);
+}
+
+/* The cutout prints straight onto the grid, no frame. */
+.cutout {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.columns {
+  grid-area: columns;
+  display: grid;
+  gap: var(--space-m);
+  margin-top: var(--space-l);
+}
+
+.aside {
+  grid-area: aside;
+  display: grid;
+  gap: var(--space-m);
+  margin-top: var(--space-xl);
+}
+
+.rule {
+  display: block;
+  height: 2px;
+  background: var(--black);
+}
+
+.values {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* The slot is what drags; the sticker inside slaps in and boils. */
+.stickerSlot {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+
+.stickerSlot:active {
+  cursor: grabbing;
+}
+
+/* Oval stickers: drag them around the print. */
+.sticker {
+  display: grid;
+  place-items: center;
+  min-height: var(--tap);
+  padding: 0.3em 0.8em 0.2em;
+  border: 2px solid var(--pink);
+  outline: 2px solid var(--black);
+  border-radius: 50%;
+  background: var(--black);
+  color: var(--pink);
+  font-family: var(--ff-rough);
+  font-size: clamp(1.25rem, 1rem + 0.9vw, 2.1rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.stickerSlot:nth-child(1) {
+  top: 12%;
+  left: 0;
+  rotate: -12deg;
+}
+
+.stickerSlot:nth-child(2) {
+  top: 44%;
+  right: 0;
+  rotate: 9deg;
+}
+
+.stickerSlot:nth-child(3) {
+  bottom: 8%;
+  left: 10%;
+  rotate: -6deg;
+}
+
+
+/* ---------- Tablet: two columns, stats bar straddles the panel edge ---------- */
+
+@media (min-width: 768px) {
+  .wrap {
+    --gutter: var(--space-m);
+    --panel-pad: var(--space-xl);
+    --grid-size: 36px;
+    --radius: 20px;
+    --radius-inner: 16px;
+
+    gap: var(--space-4xl);
+  }
+
+  .panel {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--space-xl);
+  }
+
+  .display {
+    font-size: clamp(4.5rem, 10.4vw, 10.5rem);
+  }
+
+  .subline {
+    font-size: clamp(1.9rem, 3.9vw, 4.25rem);
+  }
+
+  .intro {
+    grid-template-areas:
+      "media title"
+      "media lede"
+      "media link";
+    grid-template-rows: auto auto 1fr;
+    padding-bottom: var(--space-4xl);
+  }
+
+  .intro .media {
+    margin-top: 0;
+  }
+
+  .lede {
+    margin-top: var(--space-xl);
+  }
+
+  /* Link sits on the print's baseline, like "All the testimonies". */
+  .intro .link {
+    align-self: end;
+    margin-top: var(--space-l);
+  }
+
+  .stats {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    display: flex;
+    gap: var(--space-l);
+    width: max-content;
+    max-width: calc(100% - 2 * var(--space-m));
+    margin: 0;
+    padding: var(--space-xs) var(--space-l) var(--space-xs) var(--space-xs);
+    transform: translate(-50%, 50%);
+  }
+
+  .statLabel {
+    max-width: 11ch;
+  }
+
+  .about {
+    grid-template-areas:
+      "lead lead"
+      "columns figure"
+      "aside figure";
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .about .lead {
+    max-width: 24ch;
+    font-size: clamp(2.25rem, 4.6vw, 3.75rem);
+  }
+
+  .figure {
+    margin-top: var(--space-2xl);
+  }
+
+  .columns {
+    margin-top: var(--space-2xl);
+  }
+
+  .aside {
+    align-self: end;
+  }
+
+}
+
+/* ---------- Desktop ---------- */
+
+@media (min-width: 1024px) {
+  .wrap {
+    --gutter: var(--space-l);
+    --panel-pad: clamp(32px, 3vw, 56px);
+    --grid-size: clamp(36px, 2.8vw, 48px);
+    --radius: 24px;
+  }
+
+  .panel {
+    column-gap: clamp(32px, 3vw, 56px);
+  }
+
+  .intro {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    padding-bottom: var(--space-4xl);
+  }
+
+  .lede {
+    margin-top: var(--space-2xl);
+  }
+
+  .stats {
+    gap: var(--space-xl);
+  }
+
+  .statValue {
+    font-size: clamp(2.25rem, 2.6vw, 3rem);
+  }
+
+  .statLabel {
+    font-size: clamp(1.35rem, 1.4vw, 1.6rem);
+  }
+
+  .about {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    grid-template-areas:
+      "lead figure"
+      "columns figure"
+      "aside figure";
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .about .lead {
+    font-size: clamp(2.5rem, 3.4vw, 3.75rem);
+  }
+
+  .figure {
+    margin-top: 0;
+  }
+
+  .columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-xl);
+    margin-top: var(--space-3xl);
+  }
+
+  .aside {
+    max-width: 44ch;
+    margin-top: var(--space-2xl);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link,
+  .link::after,
+  .hint {
+    transition: none;
+  }
+
+  .link:hover,
+  .link::after {
+    animation: none;
+  }
+}

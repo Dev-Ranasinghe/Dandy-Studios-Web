@@ -1,0 +1,509 @@
+/* Registered so getComputedStyle resolves clamp() to pixels for the outline script. */
+@property --radius {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --tab-h {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --tab-pad {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --notch-h {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --notch-w {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --notch-gap {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+.footer {
+  --frame: clamp(10px, 1.2vw, 20px);
+  --radius: 28px;
+  --tab-h: 44px;
+  --tab-pad: 22px;
+  --notch-h: clamp(24px, 1.9vw, 34px);
+  --notch-gap: clamp(20px, 2vw, 36px);
+  --panel: #171a12; /* night tinted toward the neon */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --highlight: #d6fa3c; /* highlighter yellow */
+  --neon: var(--highlight); /* accents inside the footer match the frame */
+
+  position: relative;
+  padding: var(--frame);
+  /* Highlighter yellow washing up from the bottom into near-white at the top. */
+  background:
+    radial-gradient(120% 60% at 50% 100%, var(--highlight) 0%, transparent 70%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--highlight) 10%, #fff) 0%,
+      color-mix(in srgb, var(--highlight) 45%, #fff) 45%,
+      var(--highlight) 100%
+    );
+  color: var(--ink);
+}
+
+/* ---------- Dark panel ---------- */
+
+.panel {
+  container-type: inline-size;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  min-height: calc(100svh - var(--frame) * 2);
+  overflow: hidden;
+  background: var(--panel);
+  color: var(--paper);
+  /* Plain rounded box until the measured outline is applied. */
+  border-radius: var(--radius);
+  clip-path: inset(var(--tab-h) 0 0 0 round var(--radius));
+}
+
+.panel[data-shaped] {
+  border-radius: 0;
+}
+
+/* Contour lines, like a topographic survey of the studio's ground. */
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url("/images/contours.svg") center / cover no-repeat;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+/* ---------- Tab ---------- */
+
+.tab {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--tab-h);
+  padding-top: 4px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 70%, transparent);
+  white-space: nowrap;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--neon);
+}
+
+.clock {
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Headline ---------- */
+
+.headline {
+  margin: clamp(32px, 5svh, 80px) 0 0;
+  padding-inline: 4cqi;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 400;
+  /* "DANDY STUDIOS" is ~5.4em wide in Tanker: fill about two thirds of the panel. */
+  font-size: calc(64cqi / 5.4);
+  line-height: 0.82;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-wrap: balance;
+}
+
+.accent {
+  color: var(--neon);
+}
+
+/* ---------- Link columns ---------- */
+
+.columns {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 40svh 12cqi 0;
+  pointer-events: none;
+}
+
+.column {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+  pointer-events: auto;
+}
+
+.label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 55%, transparent);
+}
+
+.column ul {
+  display: grid;
+  gap: 2px;
+}
+
+.bigLink {
+  display: inline-block;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.75rem, 2.5cqi, 2.75rem);
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+/* One line tall: each letter carries a highlighted twin just below, which rolls into view. */
+.roll {
+  display: inline-flex;
+  overflow: hidden;
+  vertical-align: top;
+}
+
+.letter {
+  position: relative;
+  display: inline-block;
+}
+
+.letter::after {
+  content: attr(data-char);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  color: var(--neon);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bigLink[data-active] .letter {
+    color: var(--neon);
+  }
+}
+
+.bigLink:focus-visible,
+.cta:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* ---------- Portrait, services strip, CTA ---------- */
+
+.figure {
+  position: relative;
+  display: grid;
+  align-self: end;
+  justify-items: center;
+  margin-top: -4svh;
+}
+
+.portrait {
+  position: relative;
+  z-index: 1;
+  width: min(50cqi, 66svh);
+  height: auto;
+  margin-bottom: -1px;
+}
+
+.strip {
+  position: absolute;
+  z-index: 0;
+  left: 0;
+  right: 0;
+  bottom: clamp(56px, 9%, 96px);
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
+.stripTrack {
+  display: flex;
+  width: max-content;
+  animation: slide 48s linear infinite;
+}
+
+.stripGroup {
+  display: flex;
+  flex: none;
+}
+
+.service {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding-right: 18px;
+  font-size: clamp(1rem, 1.6cqi, 1.5rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--paper) 78%, transparent);
+}
+
+.star {
+  width: 0.7em;
+  height: 0.7em;
+  color: var(--neon);
+}
+
+.cta {
+  position: absolute;
+  z-index: 3;
+  bottom: clamp(20px, 3svh, 32px);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-radius: 10px;
+  background: var(--neon);
+  color: var(--ink);
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  box-shadow: 0 16px 30px -14px rgb(0 0 0 / 0.8);
+  transition:
+    transform 400ms var(--ease-out),
+    box-shadow 400ms var(--ease-out);
+}
+
+.cta:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 36px -16px rgb(0 0 0 / 0.9);
+}
+
+.ctaIcon,
+.topIcon {
+  width: 14px;
+  height: 14px;
+  transition: transform 400ms var(--ease-out);
+}
+
+.cta:hover .ctaIcon {
+  transform: translate(2px, -2px);
+}
+
+/* ---------- Notch labels ---------- */
+
+.base {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.copyright,
+.top {
+  position: absolute;
+  /* Centred in the neon band made by the notch plus the frame below it. */
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  height: calc(var(--notch-h) + var(--frame));
+  white-space: nowrap;
+}
+
+.copyright {
+  left: var(--frame);
+}
+
+.top {
+  right: var(--frame);
+  gap: 8px;
+  font-family: var(--font-display), sans-serif;
+  font-size: 17px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.topIcon {
+  transform: rotate(-45deg);
+}
+
+.top:hover .topIcon {
+  transform: rotate(-45deg) translate(2px, -2px);
+}
+
+.top:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@keyframes slide {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- Tablet: stack the columns above the portrait ---------- */
+
+@media (max-width: 1024px) {
+  .footer {
+    --radius: 22px;
+  }
+
+  .panel {
+    min-height: 0;
+    grid-template-rows: auto auto auto auto;
+  }
+
+  .headline {
+    font-size: calc(88cqi / 5.4);
+  }
+
+  .columns {
+    position: static;
+    justify-content: center;
+    gap: 14cqi;
+    padding: clamp(40px, 6vw, 64px) 6cqi 0;
+  }
+
+  .bigLink {
+    font-size: clamp(1.6rem, 4.4cqi, 2.4rem);
+  }
+
+  .figure {
+    margin-top: clamp(24px, 4vw, 40px);
+  }
+
+  .portrait {
+    width: min(78cqi, 620px);
+  }
+
+  /* The portrait fills the width here, so the strip runs above it instead of behind it. */
+  .strip {
+    position: relative;
+    bottom: auto;
+    width: 100%;
+    margin: clamp(32px, 5vw, 48px) 0 clamp(16px, 3vw, 28px);
+  }
+}
+
+/* ---------- Phone: services, links, headline, then the portrait ---------- */
+
+@media (max-width: 640px) {
+  .footer {
+    --radius: 18px;
+    --tab-h: 34px;
+    --tab-pad: 16px;
+    /* Corners step up; the portrait's wide centre runs down to the frame. */
+    --notch-h: 22px;
+    --notch-w: 20cqi;
+    padding-top: clamp(40px, 12vw, 64px);
+  }
+
+  .tab {
+    font-size: 11px;
+    gap: 8px;
+  }
+
+  .strip {
+    order: 1;
+    margin: 18px 0 0;
+  }
+
+  .service {
+    font-size: 1.05rem;
+    color: var(--neon);
+  }
+
+  .star {
+    color: color-mix(in srgb, var(--paper) 60%, transparent);
+  }
+
+  .columns {
+    order: 2;
+    align-items: start;
+    justify-content: center;
+    gap: 16cqi;
+    padding: 44px 6cqi 0;
+  }
+
+  .column {
+    gap: 10px;
+  }
+
+  .bigLink {
+    font-size: clamp(1.4rem, 7.2cqi, 1.9rem);
+  }
+
+  .headline {
+    order: 3;
+    margin-top: 56px;
+    font-size: calc(90cqi / 5.4);
+  }
+
+  .figure {
+    order: 4;
+    margin-top: 12px;
+  }
+
+  .portrait {
+    width: 92cqi;
+  }
+
+  .cta {
+    bottom: calc(var(--notch-h) + 14px);
+    padding: 14px 20px;
+    font-size: 14px;
+  }
+
+  /* Labels sit centred in the frame below the panel, "Back to top" first. */
+  .base {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 20px;
+    padding: 16px 8px 6px;
+    font-size: 12px;
+  }
+
+  .copyright,
+  .top {
+    position: static;
+    height: auto;
+  }
+
+  .top {
+    order: -1;
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stripTrack {
+    animation: none;
+  }
+
+  .cta,
+  .ctaIcon,
+  .topIcon {
+    transition: none;
+  }
+}

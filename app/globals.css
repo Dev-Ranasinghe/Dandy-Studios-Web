@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #0e0d0c;
+  --night: #0b0b0b;
+  --ember: #dc5731;
+  --ember-deep: #b8421f;
+  --paper: #f3eee9;
+  --neon: #8cff32;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  background: var(--night);
+  color: var(--paper);
+  font-family: var(--font-text), "Helvetica Neue", Arial, sans-serif;
+  font-weight: 500;
+}
+
+::selection {
+  background: var(--neon);
+  color: var(--ink);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+p {
+  margin: 0;
+}
+
+
+/*
+ * Licensed display faces from the reference. Drop the files into public/fonts/
+ * and they take over from the Anton / Bebas Neue stand-ins automatically.
+ */
+@font-face {
+  font-family: "Harber";
+  src: local("Harber Medium Condensed"), local("Harber-MediumCondensed"),
+    url("/fonts/HarberMediumCondensed.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Early Edition JNL";
+  src: local("Early Edition JNL"), local("EarlyEditionJNL"),
+    url("/fonts/EarlyEditionJNL.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}

@@ -1,0 +1,306 @@
+/*
+ * Mobile-first, same world as StudioSections: sky ground, neon pink band,
+ * black card, Harber / Early Edition / Dosis, 4px spacing scale.
+ */
+.wrap {
+  --sky: #c6def8;
+  --pink: #ff2e97;
+  --black: #000000;
+
+  --ff-display: "Harber", var(--font-anton), sans-serif;
+  --ff-rough: "Early Edition JNL", var(--font-bebas), sans-serif;
+  --ff-text: var(--font-dosis), sans-serif;
+
+  --space-xs: 8px;
+  --space-s: 12px;
+  --space-m: 16px;
+  --space-l: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  --gutter: var(--space-xs);
+  --radius: 16px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "marquee"
+    "stage"
+    "card";
+  gap: var(--space-s);
+  overflow-x: clip;
+  padding: var(--space-2xl) var(--gutter);
+  padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right));
+  background: var(--sky);
+  color: var(--black);
+  font-family: var(--ff-text);
+  font-weight: 600;
+}
+
+.wrap ::selection {
+  background: var(--pink);
+  color: var(--black);
+}
+
+.defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* ---------- Type tunnel ---------- */
+
+.stage {
+  grid-area: stage;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  container-type: inline-size;
+  touch-action: pan-y;
+}
+
+.ink {
+  position: absolute;
+  inset: 0;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  perspective: 60cqw;
+  perspective-origin: 50% 50%;
+}
+
+.wall {
+  position: absolute;
+  overflow: hidden;
+  display: flex;
+  color: var(--black);
+  font-family: var(--ff-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Side walls fold back into depth from the frame's edges. */
+.left,
+.right {
+  top: 0;
+  width: 200cqw;
+  height: 100cqw;
+  align-items: center;
+  font-size: 74cqw;
+  line-height: 0.82;
+}
+
+.left {
+  left: 0;
+  transform-origin: 0 50%;
+  transform: rotateY(90deg);
+}
+
+.right {
+  right: 0;
+  transform-origin: 100% 50%;
+  transform: rotateY(-90deg);
+}
+
+.top,
+.floor {
+  left: 0;
+  width: 100cqw;
+  height: 200cqw;
+  justify-content: center;
+  font-size: 25cqw;
+  line-height: 0.86;
+}
+
+.top {
+  top: 0;
+  transform-origin: 50% 0;
+  transform: rotateX(-90deg);
+}
+
+.floor {
+  bottom: 0;
+  transform-origin: 50% 100%;
+  transform: rotateX(90deg);
+}
+
+/* Streamed every frame: kept on their own layers so the loop never repaints. */
+.strip {
+  display: flex;
+  flex: none;
+  will-change: transform;
+}
+
+.stripY {
+  flex-direction: column;
+  align-items: center;
+}
+
+.set {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+}
+
+.left .set,
+.right .set {
+  display: block;
+  padding-right: 0.25em;
+}
+
+.row {
+  display: block;
+  letter-spacing: 0.02em;
+}
+
+/* The word the tunnel stands on, like "Scène" in the reference. */
+.base {
+  position: absolute;
+  inset: auto 0 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  padding-top: 1.5cqw;
+  overflow: visible;
+  background: var(--sky);
+  fill: var(--black);
+  font-family: var(--ff-display);
+  font-size: 30px;
+}
+
+/* ---------- Marquee band ---------- */
+
+.marquee {
+  grid-area: marquee;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--pink);
+}
+
+.marqueeStrip {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.marqueeItem {
+  display: flex;
+  align-items: center;
+  gap: 0.2em;
+  padding: 0.12em 0.3em 0;
+  font-family: var(--ff-display);
+  font-size: clamp(3rem, 14vw, 7rem);
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.glyph {
+  width: 0.62em;
+  height: 0.62em;
+  margin-top: -0.1em;
+  fill: var(--black);
+}
+
+/* ---------- Card ---------- */
+
+.card {
+  grid-area: card;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-l) var(--space-m) var(--space-xl);
+  border-radius: var(--radius);
+  background: var(--black);
+  color: var(--sky);
+}
+
+.label {
+  font-family: var(--ff-rough);
+  font-size: 1.35rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.heading {
+  margin: var(--space-3xl) 0 0;
+  max-width: 22ch;
+  font-family: var(--ff-rough);
+  font-size: clamp(2.1rem, 8.6vw, 4.6rem);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.body {
+  max-width: 50ch;
+  margin-top: var(--space-l);
+  font-size: clamp(1.0625rem, 0.95rem + 0.35vw, 1.25rem);
+  line-height: 1.25;
+  text-wrap: pretty;
+}
+
+/* ---------- Tablet: tunnel beside the band and card ---------- */
+
+@media (min-width: 768px) {
+  .wrap {
+    --gutter: var(--space-m);
+    --radius: 20px;
+
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "stage marquee"
+      "stage card";
+    column-gap: var(--space-l);
+    row-gap: var(--space-m);
+    padding-block: var(--space-3xl);
+  }
+
+  .stage {
+    align-self: start;
+  }
+
+  .marqueeItem {
+    font-size: clamp(3.25rem, 7vw, 7rem);
+  }
+
+  .card {
+    padding: var(--space-l);
+  }
+
+  .heading {
+    margin-top: auto;
+    padding-top: var(--space-2xl);
+    font-size: clamp(2rem, 4.2vw, 4.6rem);
+  }
+}
+
+/* ---------- Desktop ---------- */
+
+@media (min-width: 1024px) {
+  .wrap {
+    --gutter: var(--space-l);
+    --radius: 24px;
+
+    column-gap: var(--space-xl);
+  }
+
+  .card {
+    padding: var(--space-xl) var(--space-xl) var(--space-2xl);
+  }
+
+  .label {
+    font-size: 1.6rem;
+  }
+
+  .body {
+    margin-top: var(--space-xl);
+  }
+}

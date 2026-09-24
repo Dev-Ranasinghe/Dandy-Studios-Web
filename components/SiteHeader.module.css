@@ -1,0 +1,337 @@
+/*
+ * Site header + full-screen menu, after the reference. The header floats over
+ * every section (light and dark), so its parts carry their own backing.
+ * Menu type is one variable face: hairline-condensed at rest, heavy when
+ * active, with E and B pulled out to the wide cut.
+ */
+
+/* ---------- Bar ---------- */
+
+.bar {
+  --glass: rgb(26 14 50 / 0.5);
+  --glass-line: rgb(255 255 255 / 0.4);
+  --paper: #fff8f2;
+  --pad: clamp(16px, 5.7vw, 116px);
+
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(14px, 2vw, 32px) var(--pad);
+  padding-inline: max(var(--pad), env(safe-area-inset-left)) max(var(--pad), env(safe-area-inset-right));
+  pointer-events: none;
+}
+
+.bar > * {
+  pointer-events: auto;
+}
+
+/* Two stacked knock-out boxes, like the reference's "The Un / Known" mark. */
+.logo {
+  display: grid;
+  gap: 2px;
+  font-family: var(--font-anybody), sans-serif;
+  font-size: clamp(0.8rem, 0.7rem + 0.4vw, 1.05rem);
+  font-stretch: 112%;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.logo span {
+  justify-self: start;
+  padding: 0.18em 0.28em 0.12em;
+  background: var(--paper);
+  color: #150a24;
+  box-shadow: 0 0 0 1.5px #150a24;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 36px);
+}
+
+.talk {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--glass-line);
+  border-radius: 4px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--paper);
+  font-family: var(--font-text), sans-serif;
+  font-size: clamp(0.8rem, 0.72rem + 0.3vw, 1rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.chevrons {
+  width: 16px;
+  height: 12px;
+}
+
+.menuButton {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--paper);
+  cursor: pointer;
+}
+
+.line {
+  position: absolute;
+  width: 26px;
+  height: 3px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+/* Over the menu's own video the controls lose their backing, as in the reference. */
+.bar[data-open] .menuButton,
+.bar[data-open] .talk {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.talk:focus-visible,
+.menuButton:focus-visible,
+.logo:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 4px;
+}
+
+/* ---------- Overlay ---------- */
+
+.overlay {
+  --rest-size: clamp(2.6rem, 8.2svh, 5.75rem);
+  --active-size: min(19svh, 15vw);
+  --ink-rest: #d6cfe2;
+  --ink-active: #fff8f2;
+
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  background: #1a1433;
+}
+
+.video,
+.tint {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.video {
+  object-fit: cover;
+}
+
+/* Deepens the water toward the reference's indigo so light type always reads. */
+.tint {
+  background:
+    radial-gradient(80% 70% at 50% 50%, rgb(20 12 44 / 0.15), rgb(20 12 44 / 0.55)),
+    rgb(26 16 60 / 0.25);
+}
+
+.list {
+  position: relative;
+  width: min(100%, 1640px);
+  margin: 0;
+  padding: clamp(88px, 11svh, 120px) var(--bar-pad, 16px) 48px;
+  list-style: none;
+}
+
+.item {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Hairline dividers that fade out toward both edges. */
+.item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  inset: auto 6% 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, rgb(214 207 226 / 0.55) 18%, rgb(214 207 226 / 0.55) 82%, transparent);
+}
+
+.item[data-dimmed] {
+  opacity: 0.5;
+}
+
+.link {
+  display: block;
+  padding: 0.12em 0.2em 0.04em;
+  color: inherit;
+  text-align: center;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--ink-active);
+  outline-offset: 2px;
+}
+
+/*
+ * --p is a spring (0 → 1, overshooting on the way): size, weight, width and
+ * colour all ride it, so the item pops and settles as one gesture.
+ */
+.word {
+  display: block;
+  font-family: var(--font-anybody), sans-serif;
+  font-size: calc(var(--rest-size) + (var(--active-size) - var(--rest-size)) * var(--p, 0));
+  font-weight: calc(250 + 650 * var(--p, 0));
+  font-stretch: calc(50% + 22% * var(--p, 0));
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--ink-active) calc(clamp(0, var(--p, 0), 1) * 100%), var(--ink-rest));
+}
+
+.long {
+  font-stretch: calc(50% + 100% * var(--p, 0));
+}
+
+/* The note line opens beneath the active item and scrolls sideways. */
+.note {
+  display: block;
+  width: min(62vw, 900px);
+  max-height: calc(clamp(0, var(--p, 0), 1) * 2.6em);
+  overflow: hidden;
+  opacity: clamp(0, var(--p, 0), 1);
+  color: var(--ink-active);
+  font-family: var(--font-text), sans-serif;
+  font-size: clamp(0.85rem, 0.7rem + 0.4vw, 1.15rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+}
+
+.noteTrack {
+  display: flex;
+  width: max-content;
+  padding-block: 0.4em 0.9em;
+  animation: slide 14s linear infinite;
+  animation-play-state: paused;
+}
+
+.item[data-active] .noteTrack {
+  animation-play-state: running;
+}
+
+.noteHalf {
+  display: flex;
+  flex: none;
+}
+
+.noteHalf > span {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.bullet {
+  width: 4px;
+  height: 4px;
+  margin-inline: 1.1em;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+@keyframes slide {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- Touch and small screens ---------- */
+
+/*
+ * No hover to pop an item, so the list shows its character at rest, as the
+ * reference's mobile menu does: medium weight with the long letters out.
+ */
+@media (hover: none), (max-width: 767px) {
+  .overlay {
+    --rest-size: clamp(2.5rem, 12.5vw, 4.5rem);
+  }
+
+  .list {
+    padding-top: clamp(96px, 20svh, 200px);
+  }
+
+  .word {
+    font-size: var(--rest-size);
+    font-weight: 560;
+    font-stretch: 58%;
+    color: var(--ink-rest);
+  }
+
+  .long {
+    font-stretch: 150%;
+  }
+
+  .item[data-dimmed] {
+    opacity: 1;
+  }
+
+  .note {
+    display: none;
+  }
+
+  .link:active .word {
+    color: var(--ink-active);
+  }
+}
+
+@media (max-width: 767px) {
+  .talk {
+    min-height: 36px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .menuButton {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .noteTrack {
+    animation: none;
+  }
+
+  .item {
+    transition: none;
+  }
+}
