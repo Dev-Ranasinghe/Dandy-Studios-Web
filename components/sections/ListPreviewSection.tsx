@@ -11,8 +11,9 @@ import { useAccent } from "@/lib/accent";
 // --bleed-up is the fade's length; --bleed-out is how far above the section it starts. On wide
 // screens the plasma only peeks above its section, so the client names above sit on clear paper,
 // and the long fade runs down inside the section (its heading sits mid-screen, on full colour).
-// Where the section is content-height (≤1025px) its heading sits near the top, so the whole fade
-// stays outside it, as before.
+// Where the section is content-height (≤1025px) its heading sits near the top, so most of the fade
+// stays outside it; it starts at 0.8 of its length above, so it never reaches past the client
+// marquee into the focus section's pinned stage (which would cut it with a hard line).
 const BLEED_MASK = `linear-gradient(to bottom,
   transparent 0,
   rgb(0 0 0 / 0.028) calc(var(--bleed-up) * 0.1),
@@ -50,7 +51,7 @@ export default function ListPreviewSection() {
   const backdrop = [accent.plasma, accent.deep, accent.lavender, accent.counter];
 
   return (
-    <section className="relative isolate flex h-screen w-full flex-col items-center justify-center gap-[var(--space-2xl)] px-[var(--gutter)] [--bleed-down:clamp(160px,24vh,280px)] [--bleed-up:clamp(200px,32vh,360px)] [--bleed-out:clamp(80px,12vh,140px)] max-[1025px]:h-auto max-[1025px]:py-[var(--section-y)] max-[1025px]:[--bleed-out:var(--bleed-up)]">
+    <section className="relative isolate flex h-screen w-full flex-col items-center justify-center gap-[var(--space-2xl)] px-[var(--gutter)] [--bleed-down:clamp(160px,24vh,280px)] [--bleed-up:clamp(200px,32vh,360px)] [--bleed-out:clamp(80px,12vh,140px)] max-[1025px]:h-auto max-[1025px]:py-[var(--section-y)] max-[1025px]:[--bleed-out:calc(var(--bleed-up)*0.8)]" data-scene="Interaction">
       <PlasmaShader
         colors={backdrop}
         settings={BACKDROP_SETTINGS}

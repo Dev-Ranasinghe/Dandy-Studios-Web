@@ -1,0 +1,634 @@
+/*
+ * The retro desktop inside the TV (phones: the handset). Exactly one viewport in size, so the
+ * Pricing window can start as the whole screen; the scroll timeline zooms it to its place here.
+ * Window chrome: bone bars, the accent on the close dot and the window's name, ink-lavender text.
+ */
+
+.desktop {
+  /* The Pricing window's share of the desktop's width; its body keeps the desktop's aspect. */
+  --pw: 0.44;
+  --bar: 36px;
+  position: absolute;
+  inset: 0;
+  font-family: var(--font-worksans), "Helvetica Neue", Arial, sans-serif;
+  color: var(--ink);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@media (max-width: 767px) {
+  .desktop {
+    --pw: 0.5;
+    --bar: 30px;
+  }
+}
+
+/* ---------- Icons ---------- */
+
+.icons {
+  position: absolute;
+  top: 9%;
+  right: 2.2%;
+  display: grid;
+  gap: clamp(12px, 2.4vh, 26px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 600ms var(--ease-out);
+}
+
+.desktop[data-live] .icons,
+.desktop[data-live] .taskbar,
+.desktop[data-live] .slot {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 500ms var(--ease-out), visibility 0s;
+}
+
+/* Desktop furniture leaves at once when the page scrolls back toward the full-screen pricing. */
+.desktop:not([data-live]) .icons,
+.desktop:not([data-live]) .taskbar,
+.desktop:not([data-live]) .slot {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 160ms ease-out, visibility 0s 160ms;
+}
+
+.desktop:not([data-live]) .icons {
+  pointer-events: none;
+}
+
+.icon {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 104px;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 500;
+  text-shadow:
+    0 1px 1px rgb(0 0 0 / 0.75),
+    0 0 1px rgb(0 0 0 / 0.6),
+    0 1px 8px color-mix(in oklab, var(--plasma) 55%, transparent);
+  cursor: pointer;
+  transition: background-color 200ms var(--ease-out);
+}
+
+.icon:hover {
+  background: rgb(255 255 255 / 0.16);
+}
+
+.icon:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border: 3px solid #fff;
+  border-radius: 4px;
+  box-shadow: 0 3px 8px rgb(0 0 0 / 0.3);
+}
+
+.fileGlyph,
+.folderGlyph {
+  width: 56px;
+  height: 64px;
+  filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.28));
+}
+
+.folderGlyph {
+  width: 68px;
+  height: 56px;
+  margin-block: 4px;
+}
+
+.filePaper {
+  fill: #fbfaf8;
+}
+
+.fileFold {
+  fill: color-mix(in oklab, var(--bone) 70%, var(--ink));
+}
+
+.fileGlyph text {
+  font-family: var(--font-worksans), sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  fill: color-mix(in oklab, var(--ink) 45%, var(--bone));
+}
+
+.folderBack {
+  fill: color-mix(in oklab, var(--lavender) 70%, var(--lilac));
+}
+
+.folderFront {
+  fill: color-mix(in oklab, var(--lilac) 75%, #fff);
+}
+
+@media (max-width: 767px) {
+  .icons {
+    top: 14%;
+    right: 1%;
+    gap: 10px;
+  }
+
+  .icon {
+    width: 82px;
+    font-size: 12px;
+  }
+
+  .thumb {
+    width: 52px;
+    height: 52px;
+  }
+
+  .fileGlyph {
+    width: 44px;
+    height: 52px;
+  }
+
+  .folderGlyph {
+    width: 54px;
+    height: 44px;
+  }
+}
+
+/* ---------- Windows ---------- */
+
+.slot {
+  position: absolute;
+}
+
+.win {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: #fbfaf8;
+  border-radius: 4px;
+  box-shadow:
+    0 22px 48px -12px rgb(0 0 0 / 0.42),
+    0 3px 8px rgb(0 0 0 / 0.18);
+}
+
+.bar {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--bar);
+  padding: 0 12px;
+  background: #fbfaf8;
+  border-bottom: 1px solid color-mix(in oklab, var(--ink) 8%, transparent);
+  touch-action: none;
+  cursor: grab;
+}
+
+[data-dragging] .bar,
+.bar:active {
+  cursor: grabbing;
+}
+
+.title {
+  max-width: calc(100% - 120px);
+  overflow: hidden;
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--lavender);
+}
+
+.title strong {
+  font-weight: 600;
+}
+
+.controls {
+  position: absolute;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.close {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--lavender);
+  cursor: pointer;
+  transition: scale 200ms var(--ease-out);
+}
+
+.close:hover {
+  scale: 1.18;
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--lavender);
+  outline-offset: 2px;
+}
+
+.hex,
+.diamond {
+  width: 12px;
+  height: 12px;
+  background: color-mix(in oklab, var(--ink) 16%, var(--bone));
+}
+
+.hex {
+  clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%);
+}
+
+.diamond {
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+@media (max-width: 767px) {
+  .title {
+    font-size: 12px;
+    max-width: calc(100% - 96px);
+  }
+
+  .close {
+    width: 11px;
+    height: 11px;
+  }
+
+  .hex,
+  .diamond {
+    width: 9px;
+    height: 9px;
+  }
+
+  .controls {
+    gap: 6px;
+    left: 9px;
+  }
+}
+
+/* Pricing: its own place, its body in the desktop's aspect so the scene fits it exactly. */
+.pricingWin {
+  position: absolute;
+  left: 2.5%;
+  bottom: calc(52px + var(--bar));
+  width: calc(var(--pw) * 100%);
+  height: auto;
+  overflow: visible;
+  background: none;
+  box-shadow: none;
+}
+
+@media (max-width: 767px) {
+  .pricingWin {
+    left: 5%;
+    bottom: calc(46px + var(--bar));
+  }
+}
+
+.pricingWin[data-closed] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.zoom {
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #fbfaf8;
+  box-shadow:
+    0 22px 48px -12px rgb(0 0 0 / 0.42),
+    0 3px 8px rgb(0 0 0 / 0.18);
+  transform-origin: 0 var(--bar);
+  will-change: transform;
+}
+
+.pricingBody {
+  position: relative;
+  aspect-ratio: var(--ui-ar, 16 / 10);
+  overflow: hidden;
+}
+
+/* The window's frame, drawn over the scene's edge so the scene's geometry never shifts. */
+.pricingBody::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 6px solid #fbfaf8;
+  border-top-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 400ms var(--ease-out);
+}
+
+.desktop[data-live] .pricingBody::after {
+  opacity: 1;
+}
+
+.desktop:not([data-live]) .zoom {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.photoWin .photo {
+  display: block;
+  width: calc(100% - 12px);
+  margin: 0 6px 6px;
+  aspect-ratio: 1 / 0.94;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.appWin {
+  height: 100%;
+}
+
+/* ---------- Testimonials ---------- */
+
+.chat {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 0.42fr) minmax(0, 1fr);
+  min-height: 0;
+  background: color-mix(in oklab, var(--bone) 70%, #fff);
+}
+
+.people {
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  background: #fff;
+  border-right: 1px solid color-mix(in oklab, var(--ink) 8%, transparent);
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 14px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--ink) 7%, transparent);
+  background: transparent;
+  color: var(--lavender);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out);
+}
+
+.person svg {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  padding: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  stroke: #fff;
+}
+
+.person span {
+  display: grid;
+  min-width: 0;
+}
+
+.person strong {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.person small {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.person:hover {
+  background: color-mix(in oklab, var(--lavender) 8%, #fff);
+}
+
+.person[aria-selected="true"] {
+  background: var(--lavender);
+  color: var(--bone);
+}
+
+.person[aria-selected="true"] svg {
+  background: var(--bone);
+  stroke: var(--lavender);
+}
+
+.person:focus-visible {
+  outline: 2px solid var(--lavender);
+  outline-offset: -3px;
+}
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 0;
+  padding: 18px 20px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.from {
+  margin: 0 0 0 48px;
+  font-size: 13px;
+  color: var(--lavender);
+}
+
+.bubbleRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.bubbleAvatar {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  border-radius: 50%;
+  background: var(--lavender);
+  stroke: #fff;
+}
+
+.bubble {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--lavender);
+  color: var(--bone);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.meta {
+  margin: 0;
+  align-self: flex-end;
+  font-size: 13px;
+  color: color-mix(in oklab, var(--ink) 55%, var(--bone));
+}
+
+@media (max-width: 767px) {
+  .person {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .person svg {
+    width: 26px;
+    height: 26px;
+    padding: 4px;
+  }
+
+  .person strong {
+    font-size: 12px;
+  }
+
+  .person small {
+    font-size: 11px;
+  }
+
+  .thread {
+    padding: 12px;
+  }
+
+  .from {
+    margin-left: 34px;
+    font-size: 11px;
+  }
+
+  .bubbleAvatar {
+    width: 26px;
+    height: 26px;
+    padding: 4px;
+  }
+
+  .bubble {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .meta {
+    font-size: 11px;
+  }
+}
+
+/* ---------- FAQ.md ---------- */
+
+.md {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 16px 18px 0;
+  background: color-mix(in oklab, var(--bone) 70%, #fff);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--lavender);
+  -webkit-user-select: text;
+  user-select: text;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--lavender) 40%, transparent) transparent;
+}
+
+.md:focus-visible {
+  outline: 2px solid var(--lavender);
+  outline-offset: -2px;
+}
+
+.md ol {
+  margin: 0;
+  padding: 0 0 0 3.4em;
+  list-style: decimal;
+}
+
+.md li {
+  padding-left: 0.9em;
+  white-space: pre-wrap;
+}
+
+.md li::marker {
+  font-size: 0.8em;
+  color: color-mix(in oklab, var(--lavender) 45%, var(--bone));
+}
+
+.mdHeading {
+  font-weight: 600;
+}
+
+.md ::selection {
+  background: var(--highlight);
+  color: var(--on-highlight);
+}
+
+@media (max-width: 767px) {
+  .md {
+    font-size: 12px;
+  }
+}
+
+/* ---------- Taskbar ---------- */
+
+.taskbar {
+  position: absolute;
+  right: 2.4%;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  z-index: 2;
+  color: #fff;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.5));
+  opacity: 0;
+  transition: opacity 600ms var(--ease-out);
+}
+
+.taskbar svg {
+  width: 24px;
+  height: 24px;
+}
+
+.clock {
+  display: flex;
+  gap: 14px;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  .taskbar {
+    gap: 10px;
+    bottom: 10px;
+  }
+
+  .taskbar svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .clock {
+    gap: 8px;
+    font-size: 12px;
+  }
+}

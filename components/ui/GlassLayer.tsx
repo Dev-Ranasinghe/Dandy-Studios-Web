@@ -59,9 +59,19 @@ const OPTICS = {
   },
 };
 
-export default function GlassLayer({ look = "control", radius }: { look?: GlassLook; radius?: number }) {
+export default function GlassLayer({
+  look = "control",
+  radius,
+  frost,
+}: {
+  look?: GlassLook;
+  radius?: number;
+  /** Overrides the look's frost (px), e.g. 0 for perfectly clear glass. */
+  frost?: number;
+}) {
+  const optics = frost === undefined ? OPTICS[look] : { ...OPTICS[look], frost };
   return (
-    <Glass className="glass-layer" radius={radius} optics={OPTICS[look]} aria-hidden="true">
+    <Glass className="glass-layer" radius={radius} optics={optics} aria-hidden="true">
       <span />
     </Glass>
   );

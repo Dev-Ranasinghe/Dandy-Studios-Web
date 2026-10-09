@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, useSpring } from "framer-motion";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { usePathname } from "next/navigation";
 import { ArrowRight, SkipForward } from "lucide-react";
 import { TRACKS, nextTrack, onSoundChange, toggleSound } from "@/lib/hero-sound";
 import { NAV } from "@/components/nav";
 import { ShaderBackground } from "@/components/ui/shader-anima";
 import GlassLayer from "@/components/ui/GlassLayer";
+import { SCROLL_HELD_ATTR } from "@/components/SmoothScroll";
 import AccentSwitch from "@/components/AccentSwitch";
 import { useAccent, useAccentName, type AccentPalette } from "@/lib/accent";
 import styles from "./SiteHeader.module.css";
@@ -184,22 +184,55 @@ export default function SiteHeader() {
   const openRef = useRef(open);
   openRef.current = open;
 
-  // The bar tucks away while scrolling down and returns on the way back up.
+  // The bar tucks away while scrolling down and returns on the way back up. A plain passive
+  // listener, one read of scrollY per frame: ScrollTrigger updated inside every scroll event and
+  // read the bar's layout each time, forcing a style recalc at the start of each scroll.
   useEffect(() => {
     const bar = barRef.current;
     if (!bar) return;
-    gsap.registerPlugin(ScrollTrigger);
-    const trigger = ScrollTrigger.create({
-      start: 0,
-      end: "max",
-      onUpdate: (self) => {
-        const hide = self.direction === 1 && self.scroll() > 160 && !openRef.current;
-        // Clear the bar's own top offset too, since it may sit lower, inside the hero frame.
-        const away = -(bar.offsetTop + bar.offsetHeight + 8);
-        gsap.to(bar, { y: hide ? away : 0, duration: 0.5, ease: "power3.out", overwrite: true });
-      },
-    });
-    return () => trigger.kill();
+    // Clear the bar's own top offset too, since it may sit lower, inside the hero frame.
+    let away = 0;
+    const measure = () => {
+      away = -(bar.offsetTop + bar.offsetHeight + 8);
+    };
+    measure();
+    let lastY = window.scrollY;
+    let hidden = false;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const y = window.scrollY;
+      if (y === lastY) return;
+      const hide = y > lastY && y > 160 && !openRef.current;
+      lastY = y;
+      if (hide === hidden) return;
+      hidden = hide;
+      // Lets the camera overlay's readouts take the bar's place while it is tucked away.
+      if (hide) document.documentElement.dataset.navHidden = "";
+      else delete document.documentElement.dataset.navHidden;
+      gsap.to(bar, { y: hide ? away : 0, duration: 0.5, ease: "power3.out", overwrite: true });
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    const onResize = () => {
+      measure();
+      if (hidden) gsap.set(bar, { y: away });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    // Opening the menu brings the bar back (below); count it as shown so the next scroll down hides it again.
+    const onMenu = () => {
+      hidden = false;
+      delete document.documentElement.dataset.navHidden;
+    };
+    window.addEventListener(MENU_OPEN_EVENT, onMenu);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener(MENU_OPEN_EVENT, onMenu);
+    };
   }, []);
 
   // Open menu: lock scroll, park the page behind `inert`, Escape closes, focus returns to the button.
@@ -212,6 +245,7 @@ export default function SiteHeader() {
     page.forEach((el) => (el.inert = true));
     const { overflow } = document.documentElement.style;
     document.documentElement.style.overflow = "hidden";
+    document.documentElement.setAttribute(SCROLL_HELD_ATTR, "");
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     const focusTimer = window.setTimeout(() => firstLinkRef.current?.focus({ preventScroll: true }), 350);
@@ -219,6 +253,7 @@ export default function SiteHeader() {
     return () => {
       page.forEach((el) => (el.inert = false));
       document.documentElement.style.overflow = overflow;
+      document.documentElement.removeAttribute(SCROLL_HELD_ATTR);
       window.removeEventListener("keydown", onKey);
       window.clearTimeout(focusTimer);
       setActive(null);
@@ -344,7 +379,7 @@ export default function SiteHeader() {
         {open && (
           <motion.nav
             id="site-menu"
-            className={styles.overlay}
+            className={styles.overlay} data-lenis-prevent
             data-mode={mode}
             aria-label="Main"
             initial={{ clipPath: "inset(0% 0% 100% 0%)" }}

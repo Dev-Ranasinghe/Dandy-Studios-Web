@@ -7,7 +7,9 @@ import { hexToRgb255, useAccent, type AccentPalette } from "@/lib/accent";
  * A thermal-camera glow that follows the pointer, in the site's palette: the pointer paints
  * heat into a small grid, the grid cools every frame, and each cell is coloured through a ramp
  * (plasma → lavender → highlight → bone, in the current accent). The canvas is drawn at low
- * resolution and blurred up by CSS, which gives the soft, liquid edge. When the pointer is idle
+ * resolution, blurred at that size, and scaled up by CSS, which gives the soft, liquid edge.
+ * The blur runs on the canvas's own few thousand cells (canvas 2D filter) rather than as a CSS
+ * filter over the whole section, which re-blurred millions of device pixels every frame. When the pointer is idle
  * (or on touch screens) a slow wandering spot keeps it alive. Runs only while on screen.
  */
 
@@ -20,6 +22,8 @@ type Props = {
 const CELL = 6; // CSS px per heat cell
 const COOL = 0.972; // per-frame decay
 const IDLE_MS = 1800; // pointer rest before the wanderer takes over
+// The look the CSS filter used to give, in cell units (blur(12px) over 6px cells).
+const FILTER = `blur(${12 / CELL}px) contrast(1.15)`;
 
 // Heat → colour ramp, as [stop, r, g, b, a]: plasma → lavender → highlight → bone.
 function rampStops(accent: AccentPalette): [number, number, number, number, number][] {
@@ -69,6 +73,15 @@ export default function HeatField({ host, className }: Props) {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce) return;
 
+    // The heat is written to an offscreen grid, then drawn through the filter onto the canvas.
+    // Without canvas filters (older Safari) the CSS filter stays on instead.
+    const grid = document.createElement("canvas");
+    const gridCtx = grid.getContext("2d");
+    ctx.filter = FILTER;
+    const baked = !!gridCtx && ctx.filter === FILTER;
+    if (baked) canvas.dataset.baked = "";
+    const target = baked ? gridCtx! : ctx;
+
     let cols = 0;
     let rows = 0;
     let heat = new Float32Array(0);
@@ -78,10 +91,12 @@ export default function HeatField({ host, className }: Props) {
       const r = el.getBoundingClientRect();
       cols = Math.max(8, Math.ceil(r.width / CELL));
       rows = Math.max(8, Math.ceil(r.height / CELL));
-      canvas.width = cols;
-      canvas.height = rows;
+      canvas.width = grid.width = cols;
+      canvas.height = grid.height = rows;
+      // Resizing a canvas resets its context state.
+      if (baked) ctx.filter = FILTER;
       heat = new Float32Array(cols * rows);
-      image = ctx.createImageData(cols, rows);
+      image = target.createImageData(cols, rows);
     };
     resize();
 
@@ -147,7 +162,11 @@ export default function HeatField({ host, className }: Props) {
         data[o + 2] = lut[k + 2];
         data[o + 3] = lut[k + 3];
       }
-      ctx.putImageData(image!, 0, 0);
+      target.putImageData(image!, 0, 0);
+      if (baked) {
+        ctx.clearRect(0, 0, cols, rows);
+        ctx.drawImage(grid, 0, 0);
+      }
       frame = visible ? requestAnimationFrame(loop) : 0;
     };
 
@@ -167,6 +186,7 @@ export default function HeatField({ host, className }: Props) {
       ro.disconnect();
       el.removeEventListener("pointermove", onMove);
       el.removeEventListener("pointerleave", onLeave);
+      delete canvas.dataset.baked;
     };
   }, [host]);
 

@@ -141,6 +141,11 @@ export default function Testimonials() {
     };
     const onScroll = () => {
       if (px < 0) return;
+      // Off screen the pointer can't be over the row: skip the hit test on every scroll event.
+      if (!visible) {
+        if (disc.dataset.show !== undefined) show(false);
+        return;
+      }
       const under = document.elementFromPoint(px, py);
       const inside = !!under && viewport.contains(under);
       show(inside || dragging);
@@ -237,7 +242,7 @@ export default function Testimonials() {
   }, [drift]);
 
   return (
-    <section className={styles.testimonials} aria-labelledby="testimonials-heading">
+    <section className={styles.testimonials} aria-labelledby="testimonials-heading" data-scene="Testimonials">
       <header className={styles.header}>
         <p className={`${styles.label} marker`}>
           <span aria-hidden="true">( </span>Testimonials<span aria-hidden="true"> )</span>

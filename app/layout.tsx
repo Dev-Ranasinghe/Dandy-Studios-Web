@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
-import { Anton, Anybody, Bebas_Neue, Dosis, Libre_Caslon_Display, Work_Sans } from "next/font/google";
+import { Anton, Anybody, Bebas_Neue, Dosis, Libre_Caslon_Display, Libre_Caslon_Text, Work_Sans } from "next/font/google";
 import SiteHeader from "@/components/SiteHeader";
 import ScrollState from "@/components/ScrollState";
+import SmoothScroll from "@/components/SmoothScroll";
+import RecordingHud from "@/components/RecordingHud";
 import { ACCENT_BOOT } from "@/lib/accent-palette";
 import "./globals.css";
 
@@ -32,6 +34,8 @@ const bebas = Bebas_Neue({ subsets: ["latin"], weight: "400", display: "swap", v
 
 // Statement + clients: a high-contrast display serif over a quiet grotesk label.
 const caslon = Libre_Caslon_Display({ subsets: ["latin"], weight: "400", display: "swap", variable: "--font-serif" });
+// The display cut has no italic; its text sibling supplies one for emphasis (focus section, tickets).
+const caslonItalic = Libre_Caslon_Text({ subsets: ["latin"], weight: "400", style: "italic", display: "swap", variable: "--font-serif-italic" });
 // Kept loaded as --font-worksans; the label face (--font-label) now points at Tanker, see globals.css.
 const workSans = Work_Sans({ subsets: ["latin"], weight: "400", display: "swap", variable: "--font-worksans" });
 
@@ -46,7 +50,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${tanker.variable} ${switzer.variable} ${dosis.variable} ${anton.variable} ${bebas.variable} ${anybody.variable} ${caslon.variable} ${workSans.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${tanker.variable} ${switzer.variable} ${dosis.variable} ${anton.variable} ${bebas.variable} ${anybody.variable} ${caslon.variable} ${caslonItalic.variable} ${workSans.variable}`}>
       <body>
         {/*
           Applies the visitor's saved accent before first paint. Next injects it into <head> outside
@@ -57,8 +61,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {ACCENT_BOOT}
         </Script>
         <ScrollState />
+        <SmoothScroll />
         <SiteHeader />
         {children}
+        <RecordingHud />
       </body>
     </html>
   );

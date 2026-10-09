@@ -34,7 +34,7 @@ export default function WorkHero() {
   const size = useTileSize();
 
   return (
-    <section className={styles.hero} aria-labelledby="work-heading">
+    <section className={styles.hero} aria-labelledby="work-heading" data-scene="The work">
       <ImageTrail
         images={TRAIL}
         touch={false}

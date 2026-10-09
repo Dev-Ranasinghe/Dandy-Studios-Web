@@ -47,7 +47,7 @@ export default function CutSection() {
   }, []);
 
   return (
-    <section ref={ref} className={styles.section} data-shown={shown} aria-labelledby="cut-heading">
+    <section ref={ref} className={styles.section} data-shown={shown} aria-labelledby="cut-heading" data-scene="Let's talk">
       <p className={styles.label}>
         <DownArrow />
         <span>

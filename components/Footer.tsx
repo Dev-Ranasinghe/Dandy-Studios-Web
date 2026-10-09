@@ -250,7 +250,7 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer id="footer" className={styles.footer}>
+    <footer id="footer" className={styles.footer} data-scene="Credits">
       <div
         ref={panelRef}
         className={styles.panel}

@@ -10,6 +10,7 @@ import { MENU_OPEN_EVENT } from "@/components/SiteHeader";
 import { onSoundChange, toggleSound as toggleMusic, tick } from "@/lib/hero-sound";
 import { wait, whenSettled } from "@/lib/settle";
 import GlassLayer from "@/components/ui/GlassLayer";
+import { SCROLL_HELD_ATTR } from "@/components/SmoothScroll";
 import styles from "./HeroSection.module.css";
 
 const COLUMNS = 8;
@@ -270,6 +271,8 @@ export default function HeroSection() {
     };
     const onMenu = () => holding() && shutDown(null);
 
+    // The eased scroll stands aside while the gate holds the page (see SmoothScroll.tsx).
+    document.documentElement.setAttribute(SCROLL_HELD_ATTR, "");
     document.addEventListener("click", onClick, true);
     window.addEventListener("wheel", holdScroll, { passive: false });
     window.addEventListener("touchmove", holdScroll, { passive: false });
@@ -277,6 +280,7 @@ export default function HeroSection() {
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener(MENU_OPEN_EVENT, onMenu);
     return () => {
+      document.documentElement.removeAttribute(SCROLL_HELD_ATTR);
       document.removeEventListener("click", onClick, true);
       window.removeEventListener("wheel", holdScroll);
       window.removeEventListener("touchmove", holdScroll);
@@ -288,7 +292,7 @@ export default function HeroSection() {
 
 
   return (
-    <section ref={sectionRef} className={styles.hero} aria-label="Dandy Studios" data-hero>
+    <section ref={sectionRef} className={styles.hero} aria-label="Dandy Studios" data-hero data-scene="Opening">
       <div ref={frameRef} className={styles.frame} data-camera={camera === "active" || undefined}>
         {/* Ground: dusk gradient and the founder, multiplied into it. */}
         <div className={styles.field} aria-hidden="true">

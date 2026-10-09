@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useAccent } from "@/lib/accent";
+import { createRenderBudget } from "@/lib/render-budget";
 
 /*
  * "Orb": made with the 21st.dev Shader Builder, used as a small sun on the paper.
@@ -385,6 +386,7 @@ export default function OrbShader({ className, style }: Props) {
     const uShape = u("u_shape");
     const uSpace = u("u_space");
 
+    const budget = createRenderBudget();
     let width = 1;
     let height = 1;
     let lastTime = 6; // a settled frame for reduced motion
@@ -416,7 +418,7 @@ export default function OrbShader({ className, style }: Props) {
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = budget.scale(rect.width, rect.height);
       width = Math.max(1, Math.round(rect.width * dpr));
       height = Math.max(1, Math.round(rect.height * dpr));
       canvas.width = width;
@@ -440,6 +442,7 @@ export default function OrbShader({ className, style }: Props) {
     const loop = (now: number) => {
       lastTime = (now - start) / 1000;
       draw(lastTime);
+      if (budget.frame(now)) resize();
       frame = requestAnimationFrame(loop);
     };
     // Runs only while on screen and while the tab is showing; reduced motion gets one still frame.
@@ -447,6 +450,7 @@ export default function OrbShader({ className, style }: Props) {
       const run = visible && !document.hidden && !reduce;
       if (run && !frame) {
         start = performance.now() - lastTime * 1000;
+        budget.reset();
         frame = requestAnimationFrame(loop);
       } else if (!run && frame) {
         cancelAnimationFrame(frame);

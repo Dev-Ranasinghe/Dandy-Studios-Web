@@ -295,6 +295,7 @@ const OrbitFlipSlider = ({
   const isFlipAnimatingRef = useRef(false);
   const flipResumeTimeoutRef = useRef<number | null>(null);
   const rotationOffsetRef = useRef(0);
+  const trackSizeRef = useRef<{ width: number; height: number } | null>(null);
   const hoveredCardCountRef = useRef(0);
   const [activeMode, setActiveMode] = useState<OrbitFlipSliderMode>(initialMode);
   const reducedMotion = usePrefersReducedMotion();
@@ -314,7 +315,12 @@ const OrbitFlipSlider = ({
       const cards = gsap.utils.toArray<HTMLElement>(".orbit-flip-slider-card", track);
       if (!cards.length) return;
 
-      const { width, height } = track.getBoundingClientRect();
+      // Sized from a ResizeObserver: a layout read here, once per orbit frame, forced a synchronous layout every frame.
+      if (!trackSizeRef.current) {
+        const { width, height } = track.getBoundingClientRect();
+        trackSizeRef.current = { width, height };
+      }
+      const { width, height } = trackSizeRef.current;
       const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
       const t: ModeTransforms = isMobile
         ? {
@@ -331,10 +337,21 @@ const OrbitFlipSlider = ({
         : transforms;
       const layout = buildLayout(mode, cards.length, width, height, sizes, t, imageGap, rotationOffsetRef.current);
 
+      // Each card keeps its base size and takes its depth as a scale, so the turning orbit only moves
+      // transforms (composited) instead of resizing sixteen boxes, and re-laying them out, every frame.
       const commit = () => {
         cards.forEach((card, i) => {
           const box = layout[i];
-          gsap.set(card, { x: box.x, y: box.y, xPercent: -50, yPercent: -50, width: box.width, height: box.height, zIndex: box.zIndex });
+          // Drawn at the nearest card's size (depth scale tops out near 1.11), so the composited
+          // layer only ever scales down and never blurs.
+          const base = { w: Math.round(sizes[i].w * 1.12), h: Math.round(sizes[i].h * 1.12) };
+          if (card.dataset.w !== `${base.w}x${base.h}`) {
+            card.dataset.w = `${base.w}x${base.h}`;
+            gsap.set(card, { width: base.w, height: base.h, xPercent: -50, yPercent: -50 });
+          }
+          const z = String(box.zIndex);
+          if (card.style.zIndex !== z) card.style.zIndex = z;
+          gsap.set(card, { x: box.x, y: box.y, scale: box.width / base.w });
         });
       };
 
@@ -386,10 +403,14 @@ const OrbitFlipSlider = ({
   );
 
   useEffect(() => {
+    const track = trackRef.current;
     applyLayout(modeRef.current, false);
-    const handleResize = () => applyLayout(modeRef.current, false);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const ro = new ResizeObserver(([entry]) => {
+      trackSizeRef.current = { width: entry.contentRect.width, height: entry.contentRect.height };
+      applyLayout(modeRef.current, false);
+    });
+    if (track) ro.observe(track);
+    return () => ro.disconnect();
   }, [applyLayout]);
 
   const handleModeChange = (mode: OrbitFlipSliderMode) => {
@@ -476,7 +497,7 @@ const OrbitFlipSlider = ({
               className="orbit-flip-slider-card absolute left-0 top-0 block"
               onMouseEnter={handleCardEnter}
               onMouseLeave={handleCardLeave}
-              style={{ perspective: "500px" }}
+              style={{ perspective: "500px", willChange: "transform" }}
             >
               <div
                 className={`orbit-flip-slider-card-inner relative h-full w-full overflow-hidden bg-neutral-900 ${rounded}`}

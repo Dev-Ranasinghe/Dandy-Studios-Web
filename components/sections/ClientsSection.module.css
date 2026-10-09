@@ -2,10 +2,10 @@
   --bone: #f4f3f1;
   --ink: #0e0d0c;
 
-  /* Rises into the empty lower half of the pinned statement above. It only reaches the screen
-     during the pin's closing hold, after the snake has gone. Positioned so it paints over the stage. */
+  /* Follows the focus section's landed TV on the same bone paper. (It used to rise into the
+     snake stage's empty lower half; with the TV between them, that rise only slid it under the
+     pinned stage, hiding the label and the top of the marquee.) */
   position: relative;
-  margin-top: calc(-1 * min(14svh, 160px));
   display: grid;
   justify-items: center;
   gap: var(--stack-gap);

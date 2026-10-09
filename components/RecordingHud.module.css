@@ -1,0 +1,315 @@
+/*
+ * The camera overlay (components/RecordingHud.tsx). Viewfinder corners, center ticks and two
+ * readouts around the screen; a scene timeline docked at the foot. The accent is the theme's
+ * --lilac (readable on the dark bar and on the page's mix of grounds); everything else is bone
+ * at reduced strength with a soft shadow, so it holds over light and dark sections alike.
+ */
+
+.frame {
+  /* Corners at the hero frame's inset, so camera frame and hero frame line up; the nav bar floats
+     inside them (globals.css). */
+  --inset: var(--hero-pad);
+  --arm: clamp(18px, 2vw, 32px);
+  position: fixed;
+  inset: 0 0 var(--hud-h) 0;
+  z-index: 80;
+  pointer-events: none;
+  color: var(--bone);
+  transition: opacity 500ms var(--ease-out);
+  /* Its updates never reach the page's layout or paint. */
+  contain: strict;
+}
+
+.frame[data-hidden] {
+  opacity: 0;
+}
+
+.corner {
+  position: absolute;
+  width: var(--arm);
+  height: var(--arm);
+  border: 0 solid color-mix(in oklab, var(--bone) 78%, transparent);
+  filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.45));
+}
+
+.tl {
+  top: var(--inset);
+  left: var(--inset);
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+
+.tr {
+  top: var(--inset);
+  right: var(--inset);
+  border-top-width: 2px;
+  border-right-width: 2px;
+}
+
+.bl {
+  bottom: var(--inset);
+  left: var(--inset);
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+}
+
+.br {
+  bottom: var(--inset);
+  right: var(--inset);
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+.tick {
+  position: absolute;
+  left: 50%;
+  width: 2px;
+  /* Short enough to clear the nav bar's top edge (--header-top is the inset + 8px). */
+  height: 5px;
+  translate: -50% 0;
+  background: color-mix(in oklab, var(--bone) 60%, transparent);
+  filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.45));
+}
+
+.tickTop {
+  top: var(--inset);
+}
+
+.tickBottom {
+  bottom: var(--inset);
+}
+
+/* Readouts run along the nav bar's centre line, in its place while it is tucked away. */
+.readout {
+  position: absolute;
+  top: calc(var(--header-top) + var(--nav-h) / 2);
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  margin: 0;
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-caps);
+  line-height: 1;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--bone) 72%, transparent);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+  white-space: nowrap;
+  /* Hidden while the nav bar is on screen (it sits over this line); shown once it tucks away. */
+  opacity: 0;
+  transition: opacity 400ms var(--ease-out);
+}
+
+:global(html[data-nav-hidden]) .readout {
+  opacity: 1;
+}
+
+/* A camera monitor's scrim behind the readout line, so it holds over bright footage. */
+.frame::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: calc(var(--header-top) + var(--nav-h) + 24px);
+  background: linear-gradient(to bottom, rgb(0 0 0 / 0.5), rgb(0 0 0 / 0.22) 55%, transparent);
+  opacity: 0;
+  transition: opacity 400ms var(--ease-out);
+}
+
+:global(html[data-nav-hidden]) .frame::before {
+  opacity: 1;
+}
+
+.readout b {
+  font-weight: inherit;
+  color: var(--bone);
+}
+
+/* Aligned to the bar's content edges: REC starts where the logo does, the FPS readout ends where
+   "Let's talk" ends. */
+.left {
+  left: calc(var(--header-x) + var(--header-pad-l));
+}
+
+.right {
+  right: calc(var(--header-x) + var(--header-pad-r));
+}
+
+.right b {
+  color: var(--lilac);
+}
+
+.rec {
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+  background: var(--highlight);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--highlight) 70%, transparent);
+  animation: rec 1.4s steps(2, jump-none) infinite;
+}
+
+@keyframes rec {
+  from { opacity: 1; }
+  to { opacity: 0.25; }
+}
+
+/* ---------- Scene timeline ---------- */
+
+.bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 85;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: stretch;
+  height: var(--hud-h);
+  background: color-mix(in oklab, var(--ink) 92%, var(--plasma));
+  border-top: 1px solid color-mix(in oklab, var(--bone) 10%, transparent);
+  color: var(--bone);
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-caps);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  /* The timecode rewrites every scroll frame: keep that layout inside the bar. */
+  contain: strict;
+}
+
+.tc,
+.now {
+  display: flex;
+  align-items: center;
+  padding: 0 clamp(14px, 1.8vw, 28px);
+  white-space: nowrap;
+}
+
+.tc {
+  gap: 0.6em;
+  border-right: 1px solid color-mix(in oklab, var(--bone) 10%, transparent);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.16em;
+}
+
+.tc span {
+  display: inline-block;
+  min-width: 11ch;
+  contain: content;
+}
+
+.now {
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  border-left: 1px solid color-mix(in oklab, var(--bone) 10%, transparent);
+  font-size: 0.6875rem;
+  line-height: 1;
+}
+
+.now b {
+  font-weight: inherit;
+  color: var(--lilac);
+}
+
+.track {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  padding: 6px 0;
+  min-width: 0;
+}
+
+.segment {
+  flex: 1 1 0;
+  min-width: 18px;
+  padding: 0 0 0 8px;
+  border: 0;
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--bone) 6%, transparent);
+  color: color-mix(in oklab, var(--bone) 48%, transparent);
+  font: inherit;
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 250ms var(--ease-out), color 250ms var(--ease-out);
+}
+
+.segment:hover {
+  background: color-mix(in oklab, var(--bone) 12%, transparent);
+  color: var(--bone);
+}
+
+.segment[data-current] {
+  background: color-mix(in oklab, var(--lilac) 26%, transparent);
+  color: var(--lilac);
+}
+
+.segment:focus-visible {
+  outline: 2px solid var(--lilac);
+  outline-offset: -2px;
+}
+
+/* The playhead: a line with a cap, riding the track. */
+.head {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--lilac);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--lilac) 60%, transparent);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.head::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  border: 5px solid transparent;
+  border-top-color: var(--lilac);
+}
+
+/* Phones: no top readouts (on a 440px screen they land on the footage's own type); the corners
+   and the timeline, which names the scene, carry the camera. */
+@media (max-width: 767px) {
+  .readout,
+  .frame::before {
+    display: none;
+  }
+
+  .tc {
+    padding: 0 10px;
+    letter-spacing: 0.08em;
+    font-size: 0.6875rem;
+  }
+
+  .tc span {
+    min-width: 0;
+  }
+
+  .now span {
+    display: none;
+  }
+
+  .now {
+    padding: 0 10px;
+  }
+
+  .segment {
+    min-width: 10px;
+    padding: 0;
+    font-size: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rec {
+    animation: none;
+  }
+}

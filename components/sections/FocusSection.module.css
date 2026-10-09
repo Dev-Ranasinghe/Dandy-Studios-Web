@@ -1,0 +1,665 @@
+/*
+ * Focus section (components/sections/FocusSection.tsx). One sticky stage over a tall track;
+ * the scroll timeline (--units long) runs the whole story inside it. Layers, outside in:
+ * the rig (TV or handset, scaled), its screen (wallpaper + one-viewport desktop + CRT glass),
+ * and inside the desktop's Pricing window, the scene that opens the section.
+ */
+
+.focus {
+  position: relative;
+  /* Above the next section, so the landed TV's shadow falls onto the same paper it scrolls into. */
+  z-index: 2;
+  height: calc(100svh + var(--units, 14) * 46svh);
+  /* The height lands on a fractional pixel; overlapping the next section by 2px keeps the dark
+     body from showing through the seam as a hairline. */
+  margin-bottom: -2px;
+  background: var(--bone);
+}
+
+/* Off screen nothing in here animates (FocusSection sets [data-offscreen]). */
+.focus[data-offscreen] *,
+.focus[data-offscreen] *::before,
+.focus[data-offscreen] *::after {
+  animation-play-state: paused !important;
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: clip;
+  background: var(--bone);
+}
+
+.float {
+  position: absolute;
+  inset: 0;
+}
+
+/* Once the TV has landed nothing in the stage needs clipping (the oversized desktop is gone), so
+   the set and its shadow leave with the page as one piece instead of being sliced at the edge. */
+.stage:has(> .float[data-floating]) {
+  overflow: visible;
+  background: none;
+}
+
+/* Once the set is at rest it hangs in the air, drifting a little; it holds still while the page
+   moves, so it never slides against the scroll. */
+.float[data-floating] {
+  animation: hover 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+:global(html[data-scrolling]) .float[data-floating] {
+  animation-play-state: paused;
+}
+
+@keyframes hover {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: -0.4deg;
+  }
+  50% {
+    translate: 0 -8px;
+    rotate: 0.5deg;
+  }
+}
+
+.rig {
+  position: absolute;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.screen {
+  position: absolute;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--lavender) 60%, var(--plasma));
+}
+
+.wallpaper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.ui {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+
+/*
+ * The glass, once it is a TV (all motion runs only while the set floats at rest):
+ *   scanlines on the glass itself; TV snow that jumps every few frames; a soft roll bar; three
+ *   tear bands on their own clocks that over-drive whatever is under them; and now and then the
+ *   picture loses vertical hold, slips, and the tube flashes. The dark lip and glare are baked
+ *   into the TV image.
+ */
+.crt {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  background: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.07) 0 1px, transparent 1px 3px);
+  z-index: 3;
+}
+
+.crt > span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  will-change: transform, opacity;
+}
+
+.grain {
+  top: -50%;
+  left: -50% !important;
+  width: 200%;
+  height: 200%;
+  background-size: 160px 160px;
+  opacity: 0.06;
+}
+
+.roll {
+  top: -30%;
+  height: 30%;
+  background: linear-gradient(transparent, rgb(255 255 255 / 0.06) 40%, rgb(255 255 255 / 0.11) 50%, rgb(0 0 0 / 0.06) 60%, transparent);
+}
+
+.band {
+  height: 4%;
+  opacity: 0;
+  /* A strip of over-driven signal: bright, colour-shifted, combed. Plain paint, no backdrop filter. */
+  background:
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 0.22) 0 3px, transparent 3px 7px),
+    linear-gradient(90deg, transparent, color-mix(in oklab, var(--lilac) 45%, transparent) 20%, rgb(255 255 255 / 0.3) 50%, color-mix(in oklab, var(--highlight) 40%, transparent) 80%, transparent);
+  visibility: hidden;
+}
+
+.bandA {
+  top: 24%;
+}
+
+.bandB {
+  top: 58%;
+  height: 2.2%;
+}
+
+.bandC {
+  top: 78%;
+  height: 6%;
+}
+
+.flash {
+  inset: 0;
+  background: color-mix(in oklab, var(--lilac) 40%, #fff);
+  opacity: 0;
+}
+
+.float[data-floating] .grain {
+  animation: snow 0.45s steps(5) infinite;
+}
+
+.float[data-floating] .roll {
+  animation: roll 7.5s linear infinite;
+}
+
+.float[data-floating] .bandA {
+  animation: tearA 6.3s steps(1, end) infinite;
+}
+
+.float[data-floating] .bandB {
+  animation: tearB 8.9s steps(1, end) infinite;
+}
+
+.float[data-floating] .bandC {
+  animation: tearC 11.7s steps(1, end) infinite;
+}
+
+.float[data-floating] .flash {
+  animation: flash 13s linear infinite;
+}
+
+.float[data-floating] .ui {
+  animation: vhold 13s steps(1, end) infinite;
+}
+
+@keyframes snow {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-7%, 4%); }
+  40% { transform: translate(5%, -6%); }
+  60% { transform: translate(-3%, -9%); }
+  80% { transform: translate(8%, 3%); }
+}
+
+@keyframes roll {
+  to { transform: translateY(440%); }
+}
+
+/* A band shows for a frame or two, jumping, then waits out the rest of its cycle. */
+@keyframes tearA {
+  0%, 100% { visibility: hidden; opacity: 0; }
+  40% { visibility: visible; opacity: 1; transform: translateX(-1.5%) scaleY(1); }
+  41% { visibility: visible; opacity: 1; transform: translate(2%, 60%) scaleY(0.6); }
+  42.2% { visibility: hidden; opacity: 0; }
+}
+
+@keyframes tearB {
+  0%, 100% { visibility: hidden; opacity: 0; }
+  71% { visibility: visible; opacity: 1; transform: translateX(1.2%); }
+  71.8% { visibility: visible; opacity: 0.8; transform: translate(-2%, -140%); }
+  72.6% { visibility: hidden; opacity: 0; }
+}
+
+@keyframes tearC {
+  0%, 100% { visibility: hidden; opacity: 0; }
+  18% { visibility: visible; opacity: 1; transform: translateX(-1%); }
+  18.5% { visibility: visible; opacity: 1; transform: translate(1.5%, -40%) scaleY(1.4); }
+  19.1% { visibility: hidden; opacity: 0; }
+}
+
+/* Vertical hold lets go: the picture jumps up, overshoots, and settles. */
+/* Moves only (no filter on the whole desktop): the flash above carries the brightness. */
+@keyframes vhold {
+  0%, 100% { translate: 0 0; }
+  83% { translate: 0 -7%; }
+  83.6% { translate: 0 3%; }
+  84.2% { translate: 0.4% -1%; }
+  84.8% { translate: 0 0; }
+}
+
+@keyframes flash {
+  0%, 82.9%, 86%, 100% { opacity: 0; }
+  83% { opacity: 0.2; }
+  84% { opacity: 0.06; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float[data-floating] .crt > span,
+  .float[data-floating] .ui {
+    animation: none;
+  }
+}
+
+.device {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+  /* Its own layer: the tint's colour blend and the shadow are drawn once into it, then the
+     layer just moves with the float instead of being re-blended every frame. */
+  isolation: isolate;
+  will-change: transform;
+  filter: drop-shadow(0 40px 50px color-mix(in oklab, var(--plasma) 30%, transparent));
+}
+
+.tvImage {
+  filter: brightness(1.18) contrast(0.96);
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * The greyscale set re-inked in the accent: the colour blend takes the accent's hue and keeps the
+ * photo's light and shadow, so the plastic reads as moulded in the theme.
+ */
+.tvTint {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklab, var(--lilac) 55%, var(--lavender));
+  mix-blend-mode: color;
+  -webkit-mask: url("/images/focus/tv.webp") center / 100% 100% no-repeat;
+  mask: url("/images/focus/tv.webp") center / 100% 100% no-repeat;
+}
+
+
+/* ---------- The scene (the Pricing window's content, one viewport in size) ---------- */
+
+.scene {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(100% / var(--pw));
+  height: calc(100% / var(--pw));
+  transform: scale(var(--pw));
+  transform-origin: 0 0;
+  overflow: hidden;
+  background: var(--bone);
+  color: var(--bone);
+}
+
+/* The rising dither (components/ui/wave-dither.tsx). */
+.tide {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.wash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(
+    140% 120% at 50% 60%,
+    color-mix(in oklab, var(--lavender) 66%, var(--lilac)) 0%,
+    color-mix(in oklab, var(--lavender) 80%, var(--lilac)) 70%,
+    color-mix(in oklab, var(--lavender) 88%, var(--plasma)) 100%
+  );
+}
+
+.snake {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: var(--ink);
+  pointer-events: none;
+}
+
+.headline {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  margin: 0;
+  padding: 0 var(--gutter);
+  font-weight: 400;
+  text-align: center;
+  pointer-events: none;
+}
+
+.lead {
+  display: block;
+  max-width: 11ch;
+  font-family: var(--font-serif), "Times New Roman", serif;
+  font-size: clamp(2.75rem, 6.2vw, 6rem);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  text-wrap: balance;
+}
+
+.key {
+  display: block;
+  margin-top: 0.08em;
+  font-family: var(--font-serif-italic), "Times New Roman", serif;
+  font-style: italic;
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+/*
+ * The packages: heading, tickets and note in one centred stack, on the spacing scale. The top pad
+ * clears the floating nav bar; gaps are --space-xl on wide screens, --space-l on phones.
+ */
+.deck {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xl);
+  padding: calc(var(--nav-h) + var(--space-l)) var(--gutter) calc(var(--space-l) + var(--hud-h));
+  pointer-events: none;
+}
+
+.deck > * {
+  pointer-events: auto;
+}
+
+.packages {
+  visibility: hidden;
+}
+
+.packagesTitle {
+  margin: 0;
+  padding: 0.3em 1.3em 0.38em;
+  border: 1.5px solid color-mix(in oklab, var(--bone) 85%, transparent);
+  border-radius: 50%;
+  font-family: var(--font-serif-italic), "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.25rem, 1.6vw, 1.75rem);
+  line-height: 1.2;
+}
+
+.tickets {
+  --ticket-w: min(25vw, 380px, calc((100svh - 360px) / 1.52));
+  /* Room for the torn stub: it drops 5% of the ticket's width and swings 4.5°, which takes no
+     layout space, so the note below would otherwise meet its dropped corner. */
+  padding-bottom: calc(var(--ticket-w) * 0.14);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: clamp(16px, 2vw, 32px);
+  perspective: 1600px;
+}
+
+/* No preserve-3d: it would stop the tickets' backdrop glass from rendering. The roll-in reads
+   through the row's perspective. */
+
+.foot {
+  display: grid;
+  gap: var(--space-3xs);
+  width: min(100%, 60ch);
+  margin: 0;
+  font-family: var(--font-worksans), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-label);
+  line-height: var(--leading-body);
+  text-align: center;
+  text-wrap: balance;
+  visibility: hidden;
+}
+
+.foot em {
+  font-family: var(--font-serif-italic), "Times New Roman", serif;
+  font-size: 1.12em;
+}
+
+@media (max-width: 767px) {
+  .focus {
+    height: calc(100svh + var(--units, 16) * 40svh);
+  }
+
+  .lead {
+    font-size: clamp(2.5rem, 11vw, 3.5rem);
+  }
+
+  .key {
+    font-size: clamp(2.6rem, 12vw, 3.75rem);
+  }
+
+  .deck {
+    gap: var(--space-l);
+    padding: calc(var(--nav-h) + var(--space-m)) var(--gutter) calc(var(--space-l) + var(--hud-h));
+  }
+
+  /* Phones: the tickets share one spot and take turns. */
+  .tickets {
+    --ticket-w: min(calc(100vw - 2 * var(--gutter)), 360px, calc((100svh - 330px) / 1.45));
+    display: grid;
+    place-items: center;
+    width: 100%;
+  }
+
+  .tickets > * {
+    grid-area: 1 / 1;
+  }
+
+  .packagesTitle {
+    font-size: 1.25rem;
+  }
+
+  .foot {
+    font-size: 0.9375rem;
+  }
+}
+
+/* No pin with reduced motion: one screen, the finished TV. */
+@media (prefers-reduced-motion: reduce) {
+  .focus {
+    height: auto;
+  }
+
+  .stage {
+    position: relative;
+  }
+}
+
+/* ---------- The focus pull: viewfinder, AF readout, distance scale ---------- */
+
+.finder {
+  position: absolute;
+  pointer-events: none;
+  visibility: hidden;
+  --c: clamp(26px, 3vw, 48px);
+  --t: 3px;
+}
+
+.corner {
+  position: absolute;
+  width: var(--c);
+  height: var(--c);
+  border: 0 solid var(--bone);
+  filter: drop-shadow(0 1px 3px color-mix(in oklab, var(--plasma) 60%, transparent));
+  transition: border-color 200ms var(--ease-out);
+  will-change: transform;
+}
+
+.tl {
+  left: 0;
+  top: 0;
+  border-left-width: var(--t);
+  border-top-width: var(--t);
+  transform-origin: 0 0;
+}
+
+.tr {
+  right: 0;
+  top: 0;
+  border-right-width: var(--t);
+  border-top-width: var(--t);
+  transform-origin: 100% 0;
+}
+
+.bl {
+  left: 0;
+  bottom: 0;
+  border-left-width: var(--t);
+  border-bottom-width: var(--t);
+  transform-origin: 0 100%;
+}
+
+.br {
+  right: 0;
+  bottom: 0;
+  border-right-width: var(--t);
+  border-bottom-width: var(--t);
+  transform-origin: 100% 100%;
+}
+
+.readout {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + var(--space-xs));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(0.875rem, 0.8rem + 0.3vw, 1.125rem);
+  line-height: 1;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--bone) 70%, transparent);
+  white-space: nowrap;
+  opacity: 0.55;
+  transition: opacity 250ms var(--ease-out), color 250ms var(--ease-out);
+}
+
+.readout b {
+  font-weight: inherit;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+}
+
+/* The focus-confirm dot: hunting, it flickers; locked, it holds on. */
+.confirm {
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  border: 1.5px solid var(--bone);
+  animation: hunt 0.3s steps(2, jump-none) infinite;
+}
+
+.finder[data-locked] .confirm {
+  animation: none;
+  background: var(--bone);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--bone) 70%, transparent);
+}
+
+.finder[data-locked] .readout {
+  opacity: 1;
+  color: var(--bone);
+}
+
+.finder[data-locked] .readout b {
+  opacity: 1;
+}
+
+@keyframes hunt {
+  from { opacity: 1; }
+  to { opacity: 0.2; }
+}
+
+/* A lens's focus-distance scale, racking under a fixed needle. */
+.distance {
+  position: absolute;
+  left: 50%;
+  bottom: calc(clamp(32px, 7svh, 72px) + var(--hud-h));
+  width: min(640px, 80%);
+  height: 44px;
+  visibility: hidden;
+  translate: -50% 0;
+  overflow: hidden;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  pointer-events: none;
+}
+
+.ruler {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  display: flex;
+  gap: 56px;
+  translate: -40% 0;
+  font-family: var(--font-worksans), "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in oklab, var(--bone) 75%, transparent);
+  will-change: transform;
+}
+
+.ruler span {
+  position: relative;
+  padding-bottom: 14px;
+  min-width: 2ch;
+  text-align: center;
+}
+
+/* Long tick under each number, short ticks between. */
+.ruler span::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 1px;
+  height: 10px;
+  background: currentColor;
+  box-shadow:
+    23px 4px 0 -0px color-mix(in oklab, var(--bone) 40%, transparent),
+    11px 6px 0 0 color-mix(in oklab, var(--bone) 25%, transparent),
+    34px 6px 0 0 color-mix(in oklab, var(--bone) 25%, transparent);
+}
+
+.needle {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 2px;
+  height: 28px;
+  translate: -50% 0;
+  background: var(--bone);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--bone) 60%, transparent);
+}
+
+@media (max-width: 767px) {
+  .finder {
+    --c: 16px;
+  }
+
+  .distance {
+    width: 86%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm {
+    animation: none;
+  }
+}

@@ -7,6 +7,7 @@ import { SCROLL_SETTLE_EVENT } from "@/components/ScrollState"
 interface Frame {
   id: number
   video: string
+  poster?: string
   defaultPos: { x: number; y: number; w: number; h: number }
   corner: string
   edgeHorizontal: string
@@ -19,6 +20,7 @@ interface Frame {
 
 interface FrameComponentProps {
   video: string
+  poster?: string
   width: number | string
   height: number | string
   className?: string
@@ -36,6 +38,7 @@ interface FrameComponentProps {
 
 function FrameComponent({
   video,
+  poster,
   width,
   height,
   className = "",
@@ -107,6 +110,8 @@ function FrameComponent({
             <video
               className="w-full h-full object-cover"
               src={video}
+              poster={poster}
+              preload="none"
               loop
               muted
               playsInline
@@ -219,8 +224,15 @@ export function DynamicFrameLayout({
   const cellRefs = useRef<(HTMLDivElement | null)[]>([])
   const pointerRef = useRef<{ x: number; y: number } | null>(null)
 
+  const gridOnScreen = useRef(false)
+
   const pickUnderPointer = () => {
     if (document.documentElement.dataset.scrolling !== undefined) return
+    // Off screen nothing can be under the pointer; skip the layout reads (this runs on every page-wide move).
+    if (!gridOnScreen.current) {
+      setHovered((prev) => (prev === null ? prev : null))
+      return
+    }
     const p = pointerRef.current
     const grid = gridRef.current
     if (!grid) return
@@ -257,10 +269,15 @@ export function DynamicFrameLayout({
         pickUnderPointer()
       }
     }
+    const io = new IntersectionObserver(([entry]) => {
+      gridOnScreen.current = entry.isIntersecting
+    })
+    if (gridRef.current) io.observe(gridRef.current)
     window.addEventListener("pointermove", onMove, { passive: true })
     window.addEventListener(SCROLL_SETTLE_EVENT, onSettle)
     document.addEventListener("mouseout", onOut)
     return () => {
+      io.disconnect()
       window.removeEventListener("pointermove", onMove)
       window.removeEventListener(SCROLL_SETTLE_EVENT, onSettle)
       document.removeEventListener("mouseout", onOut)
@@ -299,6 +316,7 @@ export function DynamicFrameLayout({
           <div key={frame.id} className="relative aspect-video">
             <FrameComponent
               video={frame.video}
+              poster={frame.poster}
               width="100%"
               height="100%"
               className="absolute inset-0"
@@ -349,6 +367,7 @@ export function DynamicFrameLayout({
           >
             <FrameComponent
               video={frame.video}
+              poster={frame.poster}
               width="100%"
               height="100%"
               className="absolute inset-0"

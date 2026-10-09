@@ -16,7 +16,7 @@ const smoothstep = (a: number, b: number, x: number) => {
 const widthAt = (s: number) => (0.8 + 0.2 * smoothstep(0, 0.18, s)) * (1 - smoothstep(0.66, 1, s) ** 1.4);
 
 type Point = { x: number; y: number };
-type Geometry = {
+export type Geometry = {
   cx: number;
   amp: number;
   thick: number;
@@ -45,7 +45,7 @@ const SNAKE_DONE = 0.85;
 const HEAD_OFFSCREEN = 0.04;
 
 /** Sizes the snake to the screen: it grows with the width, but gently, so it never swamps the text. */
-function geometry(width: number, vh: number): Geometry {
+export function geometry(width: number, vh: number): Geometry {
   const phone = width < 768;
   const amp = Math.min(width * 0.19, 60 + width * 0.045);
   const thick = amp * BODY_RATIO;
@@ -95,7 +95,7 @@ function pointAt(g: Geometry, s: number): Point {
  * The logo's snake slithering up the page. It slides along one fixed serpentine track,
  * so the body undulates exactly the way a real snake's does.
  */
-function drawSnake(g: Geometry, headY: number) {
+export function drawSnake(g: Geometry, headY: number) {
   // Scroll drives the head down the page; convert that to distance along the track.
   const headS = (headY / g.wave) * g.period;
   const bodyS = (g.length / g.wave) * g.period;

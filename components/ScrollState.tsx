@@ -18,7 +18,8 @@ export default function ScrollState() {
     const root = document.documentElement;
     let settle = 0;
     const markScrolling = () => {
-      root.dataset.scrolling = "";
+      // Set once per gesture, not on every scroll event: each write re-checks every glass layer's style.
+      if (root.dataset.scrolling === undefined) root.dataset.scrolling = "";
       window.clearTimeout(settle);
       settle = window.setTimeout(() => {
         delete root.dataset.scrolling;

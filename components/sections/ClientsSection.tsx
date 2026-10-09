@@ -73,7 +73,7 @@ export default function ClientsSection() {
   useMarquee(sectionRef, trackRef);
 
   return (
-    <section ref={sectionRef} className={styles.section} aria-labelledby="clients-heading">
+    <section ref={sectionRef} className={styles.section} aria-labelledby="clients-heading" data-scene="Clients">
       <h2 id="clients-heading" className={`${styles.label} marker`}>
         <span aria-hidden="true">(</span> Clients <span aria-hidden="true">)</span>
       </h2>

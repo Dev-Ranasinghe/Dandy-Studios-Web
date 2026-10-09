@@ -23,6 +23,8 @@
   --hero-pad: clamp(8px, 1.6vw, 28px);
   --hero-strip: 35px;
   --nav-h: 56px;
+  /* The camera overlay's scene timeline at the foot of the screen (components/RecordingHud.tsx). */
+  --hud-h: 44px;
   /* The footer's clear band above its dark panel (its top padding + tab height); the crowd
      section tucks under it. Footer.module.css reads the same token, so the two always match. */
   --footer-lip: calc(clamp(10px, 1.2vw, 20px) + 44px);
@@ -178,10 +180,18 @@ html {
   }
 }
 
-/* While the home hero is on the page, the header sits inside its frame, at the top, above the clock strip. */
-html:has([data-hero]) {
+/*
+ * One frame geometry for every page: the camera overlay's corners sit at --hero-pad (the hero
+ * frame's own inset), and the nav bar floats inside them at the same place on every page (on the
+ * home page, inside the hero frame above its clock strip). The overlay's readouts take the bar's
+ * centre line and its content edges (--header-pad-l / -r), so they appear in its place when it
+ * tucks away.
+ */
+:root {
   --header-top: calc(var(--hero-pad) + 8px);
   --header-x: calc(var(--hero-pad) + clamp(8px, 1vw, 16px));
+  --header-pad-l: clamp(16px, 2.6vw, 40px);
+  --header-pad-r: clamp(8px, 1.2vw, 14px);
 }
 
 html {
@@ -372,4 +382,41 @@ html[data-scrolling] .glass-host .glass-layer {
     var(--glass-tint) 48%,
     color-mix(in oklab, var(--glass-tint) 50%, transparent) 100%
   );
+}
+
+/* Focus section tickets: how far the stub has torn (components/sections/focus/Ticket.module.css). */
+@property --rip {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+
+/* Lenis (components/SmoothScroll.tsx): the eased scroll owns the page's motion. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* The page ends above the scene timeline. */
+body {
+  padding-bottom: var(--hud-h);
+}
+
+@media (max-width: 767px) {
+  :root {
+    --hud-h: 36px;
+  }
 }

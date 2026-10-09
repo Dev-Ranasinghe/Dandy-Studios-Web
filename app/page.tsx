@@ -2,24 +2,23 @@ import Footer from "@/components/Footer";
 import HeroSection from "@/components/sections/HeroSection";
 import FrameGridSection from "@/components/sections/FrameGridSection";
 import FeaturedWorkSection from "@/components/sections/FeaturedWorkSection";
-import StatementSection from "@/components/sections/StatementSection";
 import ClientsSection from "@/components/sections/ClientsSection";
-import SnakeTrail from "@/components/sections/SnakeTrail";
 import ListPreviewSection from "@/components/sections/ListPreviewSection";
 import CutSection from "@/components/sections/CutSection";
 import CrowdSection from "@/components/sections/CrowdSection";
 import Testimonials from "@/components/sections/Testimonials";
+import FocusSection from "@/components/sections/FocusSection";
+import TreatmentsSection from "@/components/sections/TreatmentsSection";
 
 export default function Home() {
   return (
     <>
       <main>
         <HeroSection />
+        <TreatmentsSection />
         <FrameGridSection />
         <FeaturedWorkSection />
-        <SnakeTrail>
-          <StatementSection />
-        </SnakeTrail>
+        <FocusSection />
         {/*
           One paper ground for these, so the plasma can bleed into its neighbours. It tucks under
           the footer's clear top band (--footer-lip), so the footer's tab rises out of this paper.

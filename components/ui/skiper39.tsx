@@ -10,7 +10,8 @@ import React, { useEffect, useRef } from "react";
  *   (React dev mode mounts effects twice);
  * - the loop and the walks pause while the canvas is off screen;
  * - figures scale with the stage width (`peepScale`), so phones get a crowd, not three giants;
- * - devicePixelRatio is capped at 2.
+ * - devicePixelRatio is capped at 1.5 (line art on a ~3MP canvas redrawn every frame), and the
+ *   figures are drawn from a pre-decoded ImageBitmap of the sprite.
  */
 
 interface CrowdCanvasProps {
@@ -37,7 +38,7 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7, className = "absolute bottom-0 
     };
     let disposed = false;
     let running = false;
-    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     let peepScale = 1;
 
     // UTILS
@@ -114,7 +115,7 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7, className = "absolute bottom-0 
 
     // TYPES
     type Peep = {
-      image: HTMLImageElement;
+      image: CanvasImageSource;
       rect: number[];
       width: number;
       height: number;
@@ -133,7 +134,7 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7, className = "absolute bottom-0 
       image,
       rect,
     }: {
-      image: HTMLImageElement;
+      image: CanvasImageSource;
       rect: number[];
     }): Peep => {
       const peep: Peep = {
@@ -178,6 +179,7 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7, className = "absolute bottom-0 
 
     // MAIN
     const img = document.createElement("img");
+    let sprite: ImageBitmap | null = null;
     const stage = {
       width: 0,
       height: 0,
@@ -190,6 +192,7 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7, className = "absolute bottom-0 
     const createPeeps = () => {
       const { rows, cols } = config;
       const { naturalWidth: width, naturalHeight: height } = img;
+      const image = sprite ?? img;
       const total = rows * cols;
       const rectWidth = width / rows;
       const rectHeight = height / cols;
@@ -197,7 +200,7 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7, className = "absolute bottom-0 
       for (let i = 0; i < total; i++) {
         allPeeps.push(
           createPeep({
-            image: img,
+            image,
             rect: [
               (i % rows) * rectWidth,
               ((i / rows) | 0) * rectHeight,
@@ -257,7 +260,7 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7, className = "absolute bottom-0 
 
     const resize = () => {
       if (!canvas) return;
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       stage.width = canvas.clientWidth;
       stage.height = canvas.clientHeight;
       canvas.width = stage.width * dpr;
@@ -299,7 +302,17 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7, className = "absolute bottom-0 
       setRunning(inView);
     };
 
-    img.onload = init;
+    // Decoded once up front, so no frame pays to decode or upload the 3600px sprite.
+    img.onload = () => {
+      if (typeof createImageBitmap !== "function") return init();
+      createImageBitmap(img)
+        .then((bitmap) => {
+          if (disposed) return bitmap.close();
+          sprite = bitmap;
+          init();
+        })
+        .catch(init);
+    };
     img.src = config.src;
     io.observe(canvas);
 
@@ -312,6 +325,7 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7, className = "absolute bottom-0 
       io.disconnect();
       window.removeEventListener("resize", handleResize);
       gsap.ticker.remove(render);
+      sprite?.close();
       crowd.forEach((peep) => {
         if (peep.walk) peep.walk.kill();
       });

@@ -65,7 +65,8 @@ const HeroCursorField = forwardRef<CursorFieldHandle, Props>(function HeroCursor
       const rect = el.getBoundingClientRect();
       width = rect.width;
       height = rect.height;
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Dots and scan lines stay crisp at 1.5x; a 2x full-screen canvas cost a lot per pointer frame.
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -102,6 +103,7 @@ const HeroCursorField = forwardRef<CursorFieldHandle, Props>(function HeroCursor
     let spin = 0; // rotation of the hand disc's streaks
     let frame = 0;
     let running = false;
+    let dirty: { x: number; y: number; w: number; h: number } | null = null;
     let visible = true;
 
     const target = () => handRef.current ?? (pointer.inside ? pointer : null);
@@ -127,7 +129,9 @@ const HeroCursorField = forwardRef<CursorFieldHandle, Props>(function HeroCursor
       trail.unshift({ x: spot.x, y: spot.y });
       if (trail.length > (reduce ? 1 : TRAIL)) trail.pop();
 
-      ctx.clearRect(0, 0, width, height);
+      // Clear only what the last frame drew, not the whole screen-sized canvas.
+      if (dirty) ctx.clearRect(dirty.x, dirty.y, dirty.w, dirty.h);
+      dirty = null;
       if (strength > 0.01) {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         for (const p of trail) {
@@ -136,6 +140,8 @@ const HeroCursorField = forwardRef<CursorFieldHandle, Props>(function HeroCursor
         }
         const bx = minX - radius, by = minY - radius;
         const bw = maxX - minX + radius * 2, bh = maxY - minY + radius * 2;
+        // Streaks reach a little past the radius (stroke widths), so pad the dirty box.
+        dirty = { x: bx - 8, y: by - 8, w: bw + 16, h: bh + 16 };
 
         // 1. A soft alpha mask: one radial blob per trail point, oldest first and faintest.
         ctx.globalCompositeOperation = "source-over";

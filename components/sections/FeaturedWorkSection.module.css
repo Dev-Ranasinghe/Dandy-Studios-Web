@@ -45,6 +45,11 @@
   pointer-events: none;
 }
 
+/* The canvas applies the same filter at its own low resolution (see heat-field.tsx). */
+.heat[data-baked] {
+  filter: none;
+}
+
 /* ---------- Statement ---------- */
 
 .headline {
@@ -124,15 +129,9 @@
   gap: var(--space-xl);
 }
 
-.copy {
-  max-width: 34ch;
-  font-family: var(--font-worksans), "Helvetica Neue", Arial, sans-serif;
-  font-size: var(--text-label);
-  line-height: var(--leading-body);
-  color: var(--soft);
-}
-
+/* Last explicit column: the right side on desktop, the only column below. */
 .actions {
+  grid-column: -2 / -1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-s);

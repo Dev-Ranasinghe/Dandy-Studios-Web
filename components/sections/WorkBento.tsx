@@ -91,7 +91,7 @@ export default function WorkBento() {
   };
 
   return (
-    <section ref={sectionRef} className={styles.bento} aria-labelledby="work-index">
+    <section ref={sectionRef} className={styles.bento} aria-labelledby="work-index" data-scene="Index">
       <aside className={styles.sidebar}>
         <p className={styles.brand}>
           <span className={styles.brandFull}>Dandy Studios</span>

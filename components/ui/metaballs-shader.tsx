@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useAccent } from "@/lib/accent";
+import { createRenderBudget } from "@/lib/render-budget";
 
 /*
  * "Metaballs": made with the 21st.dev Shader Builder.
@@ -396,11 +397,12 @@ export default function MetaballsShader({ className, style, fadeY = 0 }: Props) 
     const uShape = u("u_shape");
     const uOrbit = u("u_orbit");
 
+    const budget = createRenderBudget();
     let width = 1;
     let height = 1;
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = budget.scale(rect.width, rect.height);
       width = Math.max(1, Math.round(rect.width * dpr));
       height = Math.max(1, Math.round(rect.height * dpr));
       canvas.width = width;
@@ -455,6 +457,7 @@ export default function MetaballsShader({ className, style, fadeY = 0 }: Props) 
     const loop = (now: number) => {
       lastTime = (now - start) / 1000;
       draw(lastTime);
+      if (budget.frame(now)) resize();
       frame = requestAnimationFrame(loop);
     };
     // Runs only while on screen and while the tab is showing; reduced motion gets one still frame.
@@ -462,6 +465,7 @@ export default function MetaballsShader({ className, style, fadeY = 0 }: Props) 
       const run = visible && !document.hidden && !reduce;
       if (run && !frame) {
         start = performance.now() - lastTime * 1000;
+        budget.reset();
         frame = requestAnimationFrame(loop);
       } else if (!run && frame) {
         cancelAnimationFrame(frame);

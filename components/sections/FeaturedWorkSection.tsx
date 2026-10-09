@@ -52,12 +52,15 @@ function useLetterWave(scope: React.RefObject<HTMLElement | null>) {
     const step = () => {
       let moving = false;
       const radius = Math.max(120, window.innerWidth * 0.12);
+      // All reads, then all writes: reading a rect after writing a letter's style forced a layout per letter.
       letters.forEach((el, i) => {
         if (pointer) {
           const r = el.getBoundingClientRect();
           const d = Math.hypot(r.left + r.width / 2 - pointer.x, r.top + r.height / 2 - pointer.y);
           target[i] = Math.max(0, 1 - d / radius) ** 2;
         } else target[i] = 0;
+      });
+      letters.forEach((el, i) => {
         const next = current[i] + (target[i] - current[i]) * 0.18;
         if (Math.abs(next - current[i]) > 0.001) moving = true;
         if (Math.abs(next - current[i]) > 0.0005 || next === 0) {
@@ -101,7 +104,7 @@ export default function FeaturedWorkSection() {
   useLetterWave(headlineRef);
 
   return (
-    <section ref={sectionRef} className={styles.section} aria-labelledby="featured-heading">
+    <section ref={sectionRef} className={styles.section} aria-labelledby="featured-heading" data-scene="Featured work">
       <div className={styles.map} aria-hidden="true" />
       <HeatField host={sectionRef} className={styles.heat} />
 
@@ -137,10 +140,6 @@ export default function FeaturedWorkSection() {
       </div>
 
       <div className={styles.foot}>
-        <p className={styles.copy}>
-          From launch sites and identities to motion and art direction: the work carries the brand, and keeps
-          carrying it long after launch day.
-        </p>
         <div className={styles.actions}>
           <a href="/work" className={`${styles.primary} glass-host glass-solid`}>
             <GlassLayer />

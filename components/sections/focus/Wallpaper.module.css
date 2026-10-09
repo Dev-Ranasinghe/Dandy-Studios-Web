@@ -1,0 +1,60 @@
+/* The desktop's wallpaper: sky, drifting clouds, hills (components/sections/focus/Wallpaper.tsx). */
+
+.wallpaper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.clouds {
+  position: absolute;
+  inset: 0;
+}
+
+/* Each lane spans the screen and slides one screen and a cloud across, so its cloud enters on the
+   left and leaves on the right; translate only, so the drift never repaints. */
+.lane {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  animation: drift linear infinite;
+  animation-play-state: paused;
+  will-change: transform;
+}
+
+.cloudArt {
+  display: block;
+  width: var(--w);
+  height: auto;
+  margin-left: calc(-1 * var(--w));
+  overflow: visible;
+}
+
+/* Only while the desktop is on screen. */
+[data-awake] .lane {
+  animation-play-state: running;
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(100% + var(--w)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lane {
+    animation: none;
+    transform: translateX(calc(30% + var(--w)));
+  }
+}

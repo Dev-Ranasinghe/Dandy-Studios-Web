@@ -535,7 +535,8 @@ export default function PlasmaShader({
     syncRef.current = sync;
 
     const onPointer = (event: PointerEvent) => {
-      if (event.pointerType !== "mouse") return;
+      // Page-wide listener: off screen, skip the layout read on every mouse move.
+      if (event.pointerType !== "mouse" || !onScreen) return;
       const rect = canvas.getBoundingClientRect();
       const x = (event.clientX - rect.left) / rect.width;
       const y = (event.clientY - rect.top) / rect.height;

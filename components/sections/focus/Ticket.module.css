@@ -1,0 +1,258 @@
+/*
+ * A package ticket in the nav bar's liquid glass, body over a tear-off stub. Everything sizes from
+ * the ticket's own width (container units), so the same ticket reads the same at full size and
+ * shrunk inside the desktop's Pricing window. --rip (0..1, registered in globals.css) tears the
+ * stub off: hover or focus on desktop, the scroll timeline on phones.
+ */
+
+.ticket {
+  --rip: 0;
+  container-type: inline-size;
+  position: relative;
+  width: var(--ticket-w, 360px);
+  color: var(--ink);
+  transition: --rip 700ms cubic-bezier(0.34, 1.4, 0.64, 1);
+  will-change: transform;
+}
+
+/*
+ * Liquid glass, exactly the nav bar's (GlassLayer look="bar", 60% ink smoke); the parts are not glass-hosts,
+ * so the at-rest frost rule never replaces the refraction. The ticket's cut-out shape is set on
+ * the glass layer (from its measured size in Ticket.tsx), never on the parts:
+ * a clipped ancestor would bound what the glass can see to the ticket alone.
+ */
+.body,
+.stub {
+  isolation: isolate;
+}
+
+.body > :global(.glass-layer),
+.stub > :global(.glass-layer) {
+  clip-path: var(--clip);
+}
+
+/* The stub keeps the bar's smoke but not its live refraction: over the wave's dark band it barely
+   shows, and three live panes instead of six keep the resting tickets inside a frame. */
+.stub > :global(.glass-layer) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Zooming out to the desktop and TV (FocusSection sets [data-still]): the same smoke, no refraction. */
+:global([data-still]) .body > :global(.glass-layer),
+:global([data-still]) .stub > :global(.glass-layer) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+
+@media (hover: hover) and (pointer: fine) {
+  .ticket:hover {
+    --rip: 1;
+  }
+}
+
+.ticket:focus-within {
+  --rip: 1;
+}
+
+.body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4cqw;
+  aspect-ratio: 1 / 0.98;
+  padding: 7cqw 7cqw 6cqw;
+  /* The nav bar's glass (look="bar"), a little clearer: 42% ink smoke to the bar's 60%. */
+  --glass-tint: color-mix(in oklab, var(--ink) 42%, transparent);
+  color: var(--bone);
+}
+
+/* The perforation: a dashed line across the body's foot, between the notches. */
+.body::after {
+  content: "";
+  position: absolute;
+  left: 6.5cqw;
+  right: 6.5cqw;
+  bottom: 1px;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, color-mix(in oklab, var(--lavender) 55%, transparent) 0 2.4cqw, transparent 2.4cqw 4cqw);
+  opacity: calc(1 - var(--rip));
+}
+
+.name {
+  margin: 0;
+  font-family: var(--font-serif-italic), "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 12cqw;
+  line-height: var(--leading-display);
+  letter-spacing: -0.02em;
+  color: var(--lilac);
+}
+
+.pitch {
+  margin: 0;
+  max-width: 34ch;
+  font-family: var(--font-worksans), "Helvetica Neue", Arial, sans-serif;
+  font-size: 4.3cqw;
+  line-height: 1.4;
+  color: color-mix(in oklab, var(--bone) 88%, var(--lilac));
+  text-wrap: pretty;
+}
+
+.pitch em,
+.features em {
+  font-family: var(--font-serif-italic), "Times New Roman", serif;
+  font-style: italic;
+  color: var(--lilac);
+}
+
+.features {
+  display: grid;
+  gap: 1.4cqw;
+  margin: auto 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-worksans), "Helvetica Neue", Arial, sans-serif;
+  font-size: 4.1cqw;
+  line-height: 1.3;
+}
+
+.features li {
+  display: flex;
+  align-items: center;
+  gap: 2.4cqw;
+}
+
+.features svg {
+  flex: none;
+  width: 2.4cqw;
+  height: 2.4cqw;
+  fill: var(--lilac);
+}
+
+/* ---------- Stub ---------- */
+
+.stub {
+  position: relative;
+  display: grid;
+  gap: 3.6cqw;
+  padding: 6.5cqw 7cqw 6cqw;
+  --glass-tint: color-mix(in oklab, var(--ink) 42%, transparent);
+  color: var(--bone);
+  transform-origin: 9% 0;
+  transform: translateY(calc(var(--rip) * 5cqw)) rotate(calc(var(--rip) * 4.5deg));
+}
+
+
+.priceRow,
+.swap,
+.motto {
+  position: relative;
+}
+
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4cqw;
+  margin: 0;
+}
+
+.caps {
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: 3.6cqw;
+  line-height: var(--leading-label);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--bone) 78%, var(--lilac));
+}
+
+.price {
+  font-family: var(--font-serif-italic), "Times New Roman", serif;
+  font-style: italic;
+  font-size: 5.6cqw;
+  color: var(--bone);
+}
+
+.motto {
+  margin: 0;
+}
+
+/* The barcode gives way to the call to action as the stub tears. */
+.swap {
+  display: grid;
+  height: 17cqw;
+}
+
+.swap > * {
+  grid-area: 1 / 1;
+}
+
+.barcode {
+  width: 100%;
+  height: 100%;
+  fill: var(--bone);
+  opacity: calc(1 - var(--rip));
+  transform: scaleY(calc(1 - var(--rip) * 0.4));
+}
+
+.call {
+  --glass-tint: var(--bone);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  min-height: 48px;
+  border-radius: 10px;
+  color: var(--ink);
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: max(11px, 3.8cqw);
+  line-height: var(--leading-label);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  text-decoration: none;
+  opacity: var(--rip);
+  transform: translateY(calc((1 - var(--rip)) * 2cqw)) scale(calc(0.94 + var(--rip) * 0.06));
+}
+
+.call svg {
+  width: 1.15em;
+  height: 1.15em;
+  transition: translate 300ms var(--ease-out);
+}
+
+.call:hover svg {
+  translate: 0.2em 0;
+}
+
+.call:focus-visible {
+  outline: 2px solid var(--highlight);
+  outline-offset: 3px;
+}
+
+/* Phones: one ticket at a time, so it sizes to its content instead of matching a row. The
+   perforation line sits on the body's foot at every size. */
+@media (max-width: 767px) {
+  .body {
+    aspect-ratio: auto;
+    gap: 3.6cqw;
+    padding: 7cqw 7cqw 7cqw;
+  }
+
+  .features {
+    margin-top: 3cqw;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticket {
+    transition: none;
+  }
+
+  .stub {
+    transform: none;
+  }
+}
