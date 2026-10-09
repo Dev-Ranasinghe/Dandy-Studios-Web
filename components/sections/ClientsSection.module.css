@@ -1,0 +1,82 @@
+.section {
+  --bone: #f4f3f1;
+  --ink: #0e0d0c;
+
+  /* Rises into the empty lower half of the pinned statement above. It only reaches the screen
+     during the pin's closing hold, after the snake has gone. Positioned so it paints over the stage. */
+  position: relative;
+  margin-top: calc(-1 * min(14svh, 160px));
+  display: grid;
+  justify-items: center;
+  gap: var(--stack-gap);
+  padding: var(--section-y-tight) 0 var(--section-y);
+  overflow: hidden;
+  /* Transparent: the page's paper shows through, and the plasma below bleeds up behind the
+     marquee. z-index keeps the text above that bleed. */
+  z-index: 1;
+  color: var(--ink);
+}
+
+.section ::selection {
+  background: var(--ink);
+  color: var(--bone);
+}
+
+.label {
+  margin: 0;
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-label);
+  font-weight: 400;
+  line-height: var(--leading-label);
+  letter-spacing: var(--tracking-label);
+  word-spacing: 0.1em;
+}
+
+.viewport {
+  width: 100%;
+  /* Clip only sideways: Caslon's descenders (g, y, p) reach below the 1.1 line box. */
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.set {
+  display: flex;
+  flex: none;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.name {
+  font-family: var(--font-serif), "Times New Roman", serif;
+  font-size: clamp(3rem, 5.2vw, 6rem);
+  line-height: 1.1;
+  letter-spacing: var(--tracking-display);
+  white-space: nowrap;
+}
+
+.dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-inline: clamp(36px, 4.6vw, 76px);
+  margin-top: 0.3em;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

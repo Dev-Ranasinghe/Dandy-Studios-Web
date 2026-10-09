@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { Anton, Anybody, Bebas_Neue, Dosis } from "next/font/google";
+import Script from "next/script";
+import { Anton, Anybody, Bebas_Neue, Dosis, Libre_Caslon_Display, Work_Sans } from "next/font/google";
 import SiteHeader from "@/components/SiteHeader";
+import ScrollState from "@/components/ScrollState";
+import { ACCENT_BOOT } from "@/lib/accent-palette";
 import "./globals.css";
 
 const tanker = localFont({
@@ -27,6 +30,11 @@ const anton = Anton({ subsets: ["latin"], weight: "400", display: "swap", variab
 const anybody = Anybody({ subsets: ["latin"], axes: ["wdth"], display: "swap", variable: "--font-anybody" });
 const bebas = Bebas_Neue({ subsets: ["latin"], weight: "400", display: "swap", variable: "--font-bebas" });
 
+// Statement + clients: a high-contrast display serif over a quiet grotesk label.
+const caslon = Libre_Caslon_Display({ subsets: ["latin"], weight: "400", display: "swap", variable: "--font-serif" });
+// Kept loaded as --font-worksans; the label face (--font-label) now points at Tanker, see globals.css.
+const workSans = Work_Sans({ subsets: ["latin"], weight: "400", display: "swap", variable: "--font-worksans" });
+
 export const metadata: Metadata = {
   title: "Dandy Studios",
   description: "Dandy Studios",
@@ -38,8 +46,17 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${tanker.variable} ${switzer.variable} ${dosis.variable} ${anton.variable} ${bebas.variable} ${anybody.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${tanker.variable} ${switzer.variable} ${dosis.variable} ${anton.variable} ${bebas.variable} ${anybody.variable} ${caslon.variable} ${workSans.variable}`}>
       <body>
+        {/*
+          Applies the visitor's saved accent before first paint. Next injects it into <head> outside
+          React's hydration, so browser extensions that add their own head scripts can't cause a
+          hydration mismatch against it.
+        */}
+        <Script id="accent-boot" strategy="beforeInteractive">
+          {ACCENT_BOOT}
+        </Script>
+        <ScrollState />
         <SiteHeader />
         {children}
       </body>

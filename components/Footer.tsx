@@ -1,26 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { NAV } from "./nav";
-import portrait from "@/public/images/portrait-cutout.webp";
+import { SERVICES } from "./services";
+import Image from "next/image";
+import portrait from "@/public/images/portrait-pixel.png";
+import GlassLayer from "@/components/ui/GlassLayer";
 import styles from "./Footer.module.css";
 
 const SOCIAL = [
   { label: "Instagram", href: "https://instagram.com/" },
   { label: "X", href: "https://x.com/" },
   { label: "LinkedIn", href: "https://linkedin.com/" },
-];
-
-const SERVICES = [
-  "Brand identity",
-  "Web design",
-  "Front-end development",
-  "Motion design",
-  "Art direction",
-  "Interactive experiences",
-  "Creative development",
 ];
 
 /* ---------- Panel shape ---------- */
@@ -146,6 +138,12 @@ function useClock() {
   return time;
 }
 
+/** The ticking time on its own, so only this text re-renders every second, not the section. */
+function Clock() {
+  const time = useClock();
+  return <>{time ?? "--:--:--"}</>;
+}
+
 const ROLL_EASE = [0.76, 0, 0.24, 1] as const;
 
 /**
@@ -190,6 +188,50 @@ function RollLink({ label, ...props }: { label: string } & React.ComponentProps<
   );
 }
 
+/**
+ * The portrait buried at the bottom of a pit: a real 3D shaft (four walls in perspective,
+ * the print as its floor). With a mouse, the viewpoint follows the pointer so you can peer
+ * down different walls.
+ */
+function Pit() {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
+
+  const look = (event: React.PointerEvent<HTMLDivElement>) => {
+    const el = ref.current;
+    if (!el || reduceMotion || event.pointerType !== "mouse") return;
+    const r = el.getBoundingClientRect();
+    const x = (event.clientX - r.left) / r.width - 0.5;
+    const y = (event.clientY - r.top) / r.height - 0.5;
+    el.style.setProperty("--look-x", `${50 - x * 36}%`);
+    el.style.setProperty("--look-y", `${35 - y * 36}%`);
+  };
+
+  const rest = () => {
+    ref.current?.style.removeProperty("--look-x");
+    ref.current?.style.removeProperty("--look-y");
+  };
+
+  return (
+    <div ref={ref} className={styles.pit} onPointerMove={look} onPointerLeave={rest}>
+      <div className={styles.shaft}>
+        <div className={styles.floor}>
+          <Image
+            className={styles.portrait}
+            src={portrait}
+            alt="Portrait of the founder of Dandy Studios holding a red rose in his teeth"
+            sizes="(max-width: 640px) 70vw, (max-width: 1024px) 50vw, 30vw"
+          />
+        </div>
+        <span className={`${styles.wall} ${styles.wallTop}`} aria-hidden="true" />
+        <span className={`${styles.wall} ${styles.wallBottom}`} aria-hidden="true" />
+        <span className={`${styles.wall} ${styles.wallLeft}`} aria-hidden="true" />
+        <span className={`${styles.wall} ${styles.wallRight}`} aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
+
 function ArrowIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -205,7 +247,6 @@ function ArrowIcon({ className }: { className?: string }) {
 
 export default function Footer() {
   const { panelRef, tabRef, leftRef, rightRef, clip } = usePanelShape();
-  const time = useClock();
   const year = new Date().getFullYear();
 
   return (
@@ -220,7 +261,7 @@ export default function Footer() {
           <span className={styles.dot} aria-hidden="true" />
           <span>Local time</span>
           <time className={styles.clock} suppressHydrationWarning>
-            {time ?? "--:--:--"}
+            <Clock />
           </time>
         </div>
 
@@ -275,14 +316,10 @@ export default function Footer() {
         </div>
 
         <div className={styles.figure}>
-          <Image
-            className={styles.portrait}
-            src={portrait}
-            alt="Portrait of the founder of Dandy Studios holding a red rose in his teeth"
-            sizes="(max-width: 1024px) 90vw, 46vw"
-          />
+          <Pit />
 
-          <a className={styles.cta} href="/contact">
+          <a className={`${styles.cta} glass-host glass-solid`} href="/contact">
+            <GlassLayer />
             Start a project
             <ArrowIcon className={styles.ctaIcon} />
           </a>

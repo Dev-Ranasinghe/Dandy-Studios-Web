@@ -1,0 +1,125 @@
+.section {
+  /* Positioned (no z-index, so no stacking context) to anchor the cursor trail. */
+  position: relative;
+  --bone: #f4f3f1;
+  --ink: #0e0d0c;
+
+  display: grid;
+  height: 100%;
+  min-height: 100svh;
+  align-content: center;
+  padding: var(--section-y) var(--gutter-editorial);
+  color: var(--ink);
+}
+
+.section ::selection {
+  background: var(--ink);
+  color: var(--bone);
+}
+
+.statement {
+  max-width: 17em;
+  font-family: var(--font-serif), "Times New Roman", serif;
+  font-size: clamp(2.25rem, 5.4vw, 6rem);
+  font-weight: 400;
+  line-height: var(--leading-statement);
+  letter-spacing: var(--tracking-display);
+}
+
+/* Word spacing comes from the gap after each span, so tokens never collapse together. */
+.word,
+.inline {
+  display: inline-block;
+  margin-right: 0.24em;
+  transition: opacity 200ms linear;
+}
+
+/*
+ * Where a word crosses the snake it inverts. White drawn with a difference blend comes out
+ * as ink on the paper and as paper on the black snake, letter by letter.
+ */
+.word,
+.glyph {
+  color: #fff;
+  mix-blend-mode: difference;
+}
+
+.portrait {
+  outline: 2px solid var(--bone);
+}
+
+.inline {
+  vertical-align: -0.12em;
+}
+
+.glyph {
+  display: block;
+  width: 0.78em;
+  height: 1.04em;
+  margin-inline: 0.12em;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+}
+
+.portrait {
+  position: relative;
+  width: 0.98em;
+  height: 0.98em;
+  overflow: hidden;
+  vertical-align: -0.16em;
+  background: var(--ink);
+}
+
+.portrait video,
+.aura {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 30%;
+  transition: scale 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (hover: hover) {
+  .portrait:hover video,
+  .portrait:hover .aura {
+    scale: 1.12;
+  }
+}
+
+/* Hard cut between footage and aura, like a reel edit. */
+.aura {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+}
+
+.aura[data-active="true"] {
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portrait video,
+  .aura {
+    display: none;
+  }
+
+  .portrait {
+    background: url("/video/statement-portrait-poster.jpg") center / cover;
+  }
+}
+
+/* Phones: bigger type with open leading fills the pinned screen; the snake weaves through it. */
+@media (max-width: 767px) {
+  .section {
+    padding-block: var(--space-2xl);
+  }
+
+  .statement {
+    font-size: clamp(2.5rem, 11vw, 3.5rem);
+    line-height: var(--leading-statement-compact);
+    letter-spacing: -0.03em;
+  }
+}

@@ -1,0 +1,56 @@
+.hero {
+  /* The trail is not clipped at the hero's foot: tiles near the bottom pass over the bento
+     (and fade out) instead of being cut off by a hard edge. */
+  position: relative;
+  z-index: 2;
+  color: var(--ink);
+}
+
+.trail {
+  display: grid;
+  place-items: center;
+  min-height: 100svh;
+  padding: calc(var(--nav-h) + var(--section-y-tight)) var(--gutter) var(--section-y-tight);
+}
+
+.inner {
+  display: grid;
+  justify-items: center;
+  gap: var(--stack-gap);
+  text-align: center;
+}
+
+.headline {
+  margin: 0;
+  font-family: var(--font-serif), "Times New Roman", serif;
+  font-size: clamp(3rem, 1.2rem + 7.4vw, 9rem);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  text-wrap: balance;
+}
+
+.lede {
+  max-width: 52ch;
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-label);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-label);
+  color: color-mix(in oklab, var(--ink) 62%, var(--bone));
+  text-wrap: pretty;
+}
+
+/* Phones: no trail to explore, so the statement sits under the bar and the work follows straight after. */
+@media (max-width: 720px) {
+  .trail {
+    min-height: 0;
+    padding: calc(var(--nav-h) + var(--space-3xl)) var(--gutter) var(--space-2xl);
+  }
+}
+
+/* The hint names the cursor; touch screens have no trail, so they skip it. */
+@media (pointer: coarse) {
+  .hint {
+    display: none;
+  }
+}

@@ -327,6 +327,8 @@ type Props = {
   /** Frame-rate ceiling; the motion is slow enough that 30fps reads as smooth. */
   fps?: number;
   className?: string;
+  /** Inline styles for the canvas, e.g. a mask that fades it into neighbouring sections. */
+  style?: React.CSSProperties;
 };
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -434,6 +436,7 @@ export default function PlasmaShader({
   quality = 0.35,
   fps = 30,
   className,
+  style,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const targetColors = useRef(packColors(colors));
@@ -563,5 +566,5 @@ export default function PlasmaShader({
     };
   }, [cursor, maxDpr, quality, fps]);
 
-  return <canvas ref={canvasRef} className={className} aria-hidden="true" />;
+  return <canvas ref={canvasRef} className={className} style={style} aria-hidden="true" />;
 }

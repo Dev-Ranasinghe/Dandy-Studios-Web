@@ -1,18 +1,187 @@
 @import "tailwindcss";
 
+/*
+ * Site tokens. DESIGN.md is the written guideline; these are its source of truth in code.
+ * Every section reads spacing, leading and colour from here rather than hard-coding values.
+ */
 :root {
+  /* ---------- Colour ---------- */
   --ink: #0e0d0c;
+  --bone: #f4f3f1; /* the editorial ground: statement, clients, closing CTA, footer frame */
+  --lavender: #4d3b78; /* sampled from the plasma; the one tint allowed on bone */
+  --lilac: #b8a9e8; /* lavender lifted for accents on dark grounds */
+  --plasma: #1c0a2e; /* deepest plasma violet, the dark ground */
+  --highlight: var(--lilac); /* the accent as a fill: marker swipes, lit cards (neon in the other themes) */
+  --on-highlight: var(--ink); /* text set on --highlight */
+  /* Hero world (night + neon), kept for the opening section. */
   --night: #0b0b0b;
-  --ember: #dc5731;
-  --ember-deep: #b8421f;
   --paper: #f3eee9;
   --neon: #8cff32;
+  --ember: #dc5731;
+  --ember-deep: #b8421f;
+  /* Hero frame geometry, shared with the site header so the thin nav sits inside the frame. */
+  --hero-pad: clamp(8px, 1.6vw, 28px);
+  --hero-strip: 35px;
+  --nav-h: 56px;
+  /* The footer's clear band above its dark panel (its top padding + tab height); the crowd
+     section tucks under it. Footer.module.css reads the same token, so the two always match. */
+  --footer-lip: calc(clamp(10px, 1.2vw, 20px) + 44px);
+
+  /* ---------- Spacing: one 8px-based scale ---------- */
+  --space-3xs: 4px;
+  --space-2xs: 8px;
+  --space-xs: 12px;
+  --space-s: 16px;
+  --space-m: 24px;
+  --space-l: 32px;
+  --space-xl: 48px;
+  --space-2xl: 64px;
+  --space-3xl: 96px;
+  --space-4xl: 128px;
+
+  /* Page rhythm: the only values sections use for their outer spacing. */
+  --gutter: clamp(20px, 4vw, 64px); /* side margin for full-width content */
+  --gutter-editorial: max(20px, 12vw); /* deeper indent for long-form statements */
+  --section-y: clamp(80px, 12vh, 144px); /* space above and below a section's content */
+  --section-y-tight: clamp(40px, 6vh, 72px); /* between two sections that read as one */
+  --stack-gap: clamp(24px, 3.5vh, 40px); /* label → heading → action inside a section */
+
+  /* ---------- Leading ---------- */
+  --leading-display: 1; /* one- and two-line display headlines */
+  --leading-statement: 1.08; /* multi-line serif statements on wide screens */
+  --leading-statement-compact: 1.2; /* the same on phones, where lines are short */
+  --leading-body: 1.5; /* running text */
+  --leading-label: 1.3; /* small sans labels and buttons */
+
+  /* ---------- Type ---------- */
+  /* Labels, captions, buttons and running text: Tanker (was Work Sans, still loaded as --font-worksans). */
+  --font-label: var(--font-display);
+  --tracking-display: -0.035em;
+  --tracking-label: 0.02em;
+  --tracking-caps: 0.14em; /* uppercase buttons and micro-labels */
+  --text-label: clamp(0.9375rem, 0.85rem + 0.25vw, 1.125rem);
+  --text-caps: clamp(0.75rem, 0.72rem + 0.15vw, 0.875rem);
+
+  /* ---------- Motion ---------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/*
+ * Accent themes, picked from the header (lib/accent-palette.ts holds the same values for
+ * canvases and shaders). Each remaps only the tinted tokens; everything built from them follows.
+ * --highlight is the raw neon, for fills only (marker swipes, lit cards); text on it uses
+ * --on-highlight. --lilac is the same accent made safe as text on dark grounds.
+ */
+html[data-accent="green"] {
+  --plasma: #051a00;
+  --lavender: #0b6e00;
+  --lilac: #10ff00;
+  --highlight: #10ff00;
+  --on-highlight: #0e0d0c;
+}
+
+html[data-accent="cyan"] {
+  --plasma: #001f1b;
+  --lavender: #006b5c;
+  --lilac: #00ffd9;
+  --highlight: #00ffd9;
+  --on-highlight: #0e0d0c;
+}
+
+html[data-accent="yellow"] {
+  --plasma: #1c1d00;
+  --lavender: #5f6200;
+  --lilac: #f8ff00;
+  --highlight: #f8ff00;
+  --on-highlight: #0e0d0c;
+}
+
+html[data-accent="red"] {
+  --plasma: #2a0000;
+  --lavender: #b80000;
+  --lilac: #ff4a4a;
+  --highlight: #ff0000;
+  --on-highlight: #0e0d0c;
+}
+
+html[data-accent="pink"] {
+  --plasma: #2a0027;
+  --lavender: #a3008f;
+  --lilac: #ff3df2;
+  --highlight: #ff10f0;
+  --on-highlight: #0e0d0c;
+}
+
+html[data-accent="violet"] {
+  --plasma: #14002e;
+  --lavender: #7f00ff;
+  --lilac: #b57aff;
+  --highlight: #7f00ff;
+  --on-highlight: #f4f3f1;
+}
+
+/* Registered as colours so a theme change eases across the page instead of snapping. */
+@property --plasma {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #1c0a2e;
+}
+
+@property --lavender {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #4d3b78;
+}
+
+@property --lilac {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #b8a9e8;
+}
+
+@property --highlight {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #b8a9e8;
+}
+
+html {
+  transition:
+    --plasma 700ms var(--ease-out),
+    --lavender 700ms var(--ease-out),
+    --lilac 700ms var(--ease-out),
+    --highlight 700ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    transition: none;
+  }
 }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+@media (max-width: 720px) {
+  :root {
+    --hero-strip: 72px;
+  }
+}
+
+/* Phone footer: 16px top padding and a 34px tab (see Footer.module.css). */
+@media (max-width: 640px) {
+  :root {
+    --footer-lip: calc(16px + 34px);
+  }
+}
+
+/* While the home hero is on the page, the header sits inside its frame, at the top, above the clock strip. */
+html:has([data-hero]) {
+  --header-top: calc(var(--hero-pad) + 8px);
+  --header-x: calc(var(--hero-pad) + clamp(8px, 1vw, 16px));
 }
 
 html {
@@ -30,8 +199,8 @@ body {
 }
 
 ::selection {
-  background: var(--neon);
-  color: var(--ink);
+  background: var(--highlight);
+  color: var(--on-highlight);
 }
 
 a {
@@ -62,10 +231,145 @@ p {
   font-display: swap;
 }
 
+/*
+ * PP Neue Montreal (Pangram Pangram), the testimonial text face from the reference. It is a
+ * licensed font: drop PPNeueMontreal-Regular.woff2 into public/fonts/ (or install it locally)
+ * and it takes over; until then the testimonials fall back to Switzer, the nearest face on hand.
+ */
+@font-face {
+  font-family: "PP Neue Montreal";
+  src: local("PP Neue Montreal Regular"), local("PPNeueMontreal-Regular"),
+    url("/fonts/PPNeueMontreal-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
 @font-face {
   font-family: "Early Edition JNL";
   src: local("Early Edition JNL"), local("EarlyEditionJNL"),
     url("/fonts/EarlyEditionJNL.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
+}
+
+/*
+ * Highlighter marks for section labels: the accent's raw neon laid behind the text like a felt
+ * tip, slightly askew. `.marker` fills the whole label; `.marker-under` is the lower stroke you
+ * draw under a word. Both wipe in left to right as they scroll into view (where scroll-driven
+ * animation is supported; elsewhere, and with reduced motion, they are simply there).
+ */
+.marker,
+.marker-under {
+  display: inline-block;
+  background-image: linear-gradient(var(--highlight), var(--highlight));
+  background-repeat: no-repeat;
+  background-position: left center;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.marker {
+  padding: 0.3em 0.65em 0.22em;
+  border-radius: 3px 7px 4px 8px / 8px 3px 7px 4px;
+  background-size: 100% 100%;
+  color: var(--on-highlight);
+  rotate: -1.5deg;
+}
+
+.marker-under {
+  padding: 0 0.2em;
+  background-position: left 88%;
+  background-size: 100% 0.62em;
+  color: var(--ink);
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .marker {
+      animation: marker-wipe linear both;
+      animation-timeline: view();
+      animation-range: entry 30% cover 30%;
+    }
+
+    .marker-under {
+      animation: marker-wipe-under linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 35%;
+    }
+  }
+}
+
+@keyframes marker-wipe {
+  from {
+    background-size: 0% 100%;
+    /* Readable on bone until the fill arrives under it. */
+    color: var(--ink);
+  }
+}
+
+@keyframes marker-wipe-under {
+  from {
+    background-size: 0% 0.62em;
+  }
+}
+
+/*
+ * Liquid glass on controls (components/ui/GlassLayer.tsx). The host is the button or link; the
+ * layer sits under its content and takes the host's --glass-tint, which stands in for the
+ * background the control used to have. Tints stay translucent so the refraction shows; keys
+ * that read as solid (bone, ink) keep enough of their colour for the label to hold contrast.
+ */
+.glass-host {
+  position: relative;
+  isolation: isolate;
+}
+
+/* !important: the library sets an inline position until it has measured the class's. */
+.glass-layer {
+  position: absolute !important;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--glass-tint, color-mix(in oklab, var(--bone) 10%, transparent));
+  pointer-events: none;
+  transition:
+    background-color 250ms var(--ease-out),
+    opacity 250ms var(--ease-out);
+}
+
+/*
+ * Performance: every live refraction is a full SVG displacement pass over the backdrop, redone
+ * each frame anything behind it moves. A dozen of them made scrolling drop frames, so a control
+ * refracts only while it is being used (hovered or keyboard-focused); at rest it keeps a cheap
+ * frost under its tint and rim, and while the page is scrolling (html[data-scrolling], set by
+ * ScrollState) it drops the backdrop entirely. The nav bar's own glass stays live throughout.
+ * !important is needed to beat the library's inline backdrop-filter.
+ */
+.glass-host:not(:hover):not(:focus-visible) > .glass-layer,
+.glass-host:not(:hover):not(:focus-visible) .glass-layer {
+  -webkit-backdrop-filter: blur(var(--glass-rest-blur, 3px)) saturate(1.2) !important;
+  backdrop-filter: blur(var(--glass-rest-blur, 3px)) saturate(1.2) !important;
+}
+
+/*
+ * .glass-calm: big panes that move or sit over motion (the drifting testimonial cards over the
+ * beans) take no backdrop at all at rest, not even the frost: live glass there halved the frame
+ * rate while the section was on screen. Their tint carries the look until they're hovered.
+ */
+.glass-host.glass-calm:not(:hover):not(:focus-visible) .glass-layer,
+html[data-scrolling] .glass-host .glass-layer {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/*
+ * Keys that must read as solid colour (bone, ink): full tint behind the label, clearing toward
+ * the rim so the page still visibly bends at the edge.
+ */
+.glass-solid > .glass-layer {
+  background: radial-gradient(
+    120% 150% at 50% 50%,
+    var(--glass-tint) 48%,
+    color-mix(in oklab, var(--glass-tint) 50%, transparent) 100%
+  );
 }

@@ -1,0 +1,345 @@
+/*
+ * Testimonials, in the editorial world: a highlighter ( Label ), a Caslon heading with a lavender
+ * asterisk, and liquid-glass cards set at staggered heights over a band of metaballs, one in each
+ * rhythm lit in the accent's neon.
+ */
+
+.testimonials {
+  --card-w: clamp(300px, 30vw, 460px);
+  --gap: clamp(16px, 2vw, 32px);
+  --rise: clamp(40px, 4vw, 64px); /* how far the stagger moves a card, at every width */
+  --band-pad: clamp(8px, 1.5vh, 16px); /* a sliver of room for the beans around the row */
+  --card-tint: 74%; /* bone in the resting glass; phones use less so the beans read through */
+
+  position: relative;
+  z-index: 1;
+  display: grid;
+  /* Header to row: the row carries its own stagger room above the cards, so keep this tight. */
+  gap: var(--space-s);
+  /* The staggered row carries its own room below; the next section brings its own top space.
+     Above: the section's usual space plus extra, so the heading clears the plasma fading in
+     from the section above rather than sitting inside its tail. */
+  padding-top: calc(var(--section-y) + clamp(48px, 8vh, 96px));
+  color: var(--ink);
+}
+
+/* ---------- Header ---------- */
+
+.header {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-s);
+  padding: 0 var(--gutter);
+  text-align: center;
+}
+
+.label,
+.aside {
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-caps);
+  line-height: var(--leading-label);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* The label is a highlighter mark (the global .marker); keep its text on the fill's colour. */
+.label {
+  color: var(--on-highlight);
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-serif), "Times New Roman", serif;
+  font-size: clamp(2.5rem, 1.4rem + 4vw, 5.5rem);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  text-wrap: balance;
+}
+
+.star {
+  color: var(--lavender);
+}
+
+/* "*Take theirs": ink over a highlighter stroke (the global .marker-under). */
+.aside {
+  color: var(--ink);
+}
+
+.star {
+  display: inline-block;
+  margin-left: 0.04em;
+  font-size: 0.8em;
+  vertical-align: 0.35em;
+}
+
+/* ---------- Row ---------- */
+
+.viewport {
+  /* Room above and below for the staggered cards, plus the band's glow around them. */
+  position: relative;
+  padding: calc(var(--rise) + var(--band-pad)) 0;
+  overflow: hidden;
+}
+
+/*
+ * The metaballs behind the row (components/ui/metaballs-shader.tsx): beans only, no ground, so
+ * the paper shows between them. They roam the whole viewport, row and the room around it, and
+ * the shader keeps every bean whole inside it.
+ */
+.band {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.track {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap);
+  width: max-content;
+  padding-inline: var(--gutter);
+  will-change: transform;
+}
+
+.item {
+  flex: none;
+  width: var(--card-w);
+  transform: translateY(calc(var(--lift) * var(--rise)));
+}
+
+/* ---------- Drift mode: drag disc and the lit card ---------- */
+
+.viewport[data-mode="drift"] {
+  position: relative;
+  cursor: none;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+/* A lilac disc in place of the cursor: ← DRAG →. Anchored at the pointer by its centre, and
+   fixed to the window so the row's overflow clipping can't cut it in half at the edges. */
+.disc {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.disc span {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  translate: -50% -50%;
+  /* A lens, as in the reference: whatever is under the disc shows through it, inverted
+     and washed in lavender (deep against the lilac card it usually sits on), so the quote stays readable under the pointer. */
+  background: color-mix(in oklab, var(--highlight) 82%, transparent);
+  -webkit-backdrop-filter: invert(1) grayscale(1);
+  backdrop-filter: invert(1) grayscale(1);
+  color: var(--on-highlight);
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: 11px;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  box-shadow: 0 12px 28px -14px color-mix(in oklab, var(--plasma) 60%, transparent);
+  opacity: 0;
+  scale: 0.3;
+  transition: opacity 250ms var(--ease-out), scale 350ms var(--ease-out);
+}
+
+.disc svg {
+  width: 13px;
+  height: 13px;
+}
+
+.disc[data-show] span {
+  opacity: 1;
+  scale: 1;
+}
+
+.viewport[data-dragging] .disc span {
+  scale: 0.82;
+}
+
+/* The card under the pointer lifts; its text is "selected" (below). */
+.card {
+  transition: translate 450ms var(--ease-out);
+}
+
+@media (hover: hover) {
+  .viewport[data-mode="drift"] .item:hover .card {
+    translate: 0 -6px;
+  }
+}
+
+/*
+ * Hover reads like a drag-select in the accent: no fill on the card, the text itself highlights.
+ * Each .hl is one inline run whose highlight is a background sized from 0 to 100%; left to slice
+ * across line breaks, the sweep runs the first line, then the next, like a selection being dragged.
+ */
+.hl {
+  background-image: linear-gradient(var(--highlight), var(--highlight));
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 0% 100%;
+  transition:
+    background-size 900ms var(--ease-out),
+    color 500ms var(--ease-out);
+}
+
+.name .hl,
+.role .hl {
+  transition-delay: 250ms;
+}
+
+@media (hover: hover) {
+  .viewport[data-mode="drift"] .item:hover .hl {
+    background-size: 100% 100%;
+    color: var(--on-highlight);
+  }
+}
+
+/* Swipe mode (touch, reduced motion): a native scroller that snaps card by card. */
+.viewport[data-mode="swipe"] {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gutter);
+  scrollbar-width: none;
+}
+
+.viewport[data-mode="swipe"]::-webkit-scrollbar {
+  display: none;
+}
+
+.viewport[data-mode="swipe"] .track {
+  will-change: auto;
+}
+
+.viewport[data-mode="swipe"] .item {
+  scroll-snap-align: start;
+}
+
+.viewport:focus-visible {
+  outline: 2px solid var(--lavender);
+  outline-offset: -2px;
+}
+
+/* ---------- Card ---------- */
+
+.card {
+  position: relative;
+  display: grid;
+  gap: var(--space-l);
+  margin: 0;
+  padding: clamp(24px, 2.6vw, 40px);
+  border-radius: 12px;
+  /*
+   * Light liquid glass (GlassLayer "pane"). At rest there is no backdrop filter (performance, see
+   * .glass-calm), so the tint does the frosting: 74% bone lets a bean behind read as a soft wash
+   * of its colour while ink text holds ≥ 7:1 over any of them. The card under the pointer, with
+   * the row stopped, refracts live.
+   */
+  --glass-tint: color-mix(in oklab, var(--bone) var(--card-tint), transparent);
+  border: 1px solid color-mix(in oklab, #fff 55%, transparent);
+  color: var(--ink);
+  box-shadow: 0 18px 40px -26px color-mix(in oklab, var(--ink) 30%, transparent);
+}
+
+.quote {
+  margin: 0;
+}
+
+.quote p {
+  /* PP Neue Montreal, as in the reference (Switzer until the licensed file is added). */
+  font-family: "PP Neue Montreal", var(--font-text), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-label);
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--highlight);
+  color: var(--on-highlight);
+  font-family: var(--font-serif), "Times New Roman", serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+}
+
+.who {
+  display: grid;
+  gap: 6px;
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+}
+
+.name {
+  font-family: "PP Neue Montreal", var(--font-text), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-label);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.role {
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--lavender);
+}
+
+/* A Caslon closing quote, set large and faint, in the card's corner. */
+.mark {
+  position: absolute;
+  right: clamp(20px, 2.2vw, 36px);
+  bottom: clamp(-18px, -1.2vw, -8px);
+  font-family: var(--font-serif), "Times New Roman", serif;
+  font-size: clamp(6rem, 5rem + 3vw, 9rem);
+  line-height: 1;
+  color: color-mix(in oklab, var(--lavender) 22%, transparent);
+  pointer-events: none;
+}
+
+/* ---------- Phones ---------- */
+
+@media (max-width: 720px) {
+  .testimonials {
+    --card-w: min(84vw, 380px);
+    /*
+     * The same staggered heights as desktop (--rise). The cards fill most of the width here, so
+     * the beans get more room above and below the row, and the resting glass is clearer, so they
+     * read through it.
+     */
+    --band-pad: 36px;
+    --card-tint: 60%;
+    gap: var(--space-2xs);
+  }
+}

@@ -1,0 +1,130 @@
+/*
+ * Accent picker, inside the nav bar's actions. It inherits the bar's --paper, --line and --bar,
+ * so it reads as one of the bar's own tiles; its tray is the same liquid glass as the bar.
+ */
+
+.root {
+  position: relative;
+}
+
+.tile {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  --glass-tint: color-mix(in oklab, var(--paper) 12%, transparent);
+  background: none;
+  color: var(--paper);
+  cursor: pointer;
+}
+
+.tile:hover,
+.tile[aria-expanded="true"] {
+  --glass-tint: color-mix(in oklab, var(--paper) 22%, transparent);
+}
+
+/* The live accent: --lilac eases between themes, so the dot changes with the page. */
+.dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--lilac);
+  box-shadow:
+    0 0 0 3px var(--bar),
+    0 0 0 4px color-mix(in oklab, var(--paper) 30%, transparent);
+  transition: scale 300ms var(--ease-out);
+}
+
+.tile:hover .dot {
+  scale: 1.12;
+}
+
+.tray {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 1;
+  border-radius: 14px;
+  box-shadow: 0 18px 36px -18px rgb(0 0 0 / 0.6);
+  transform-origin: calc(100% - 22px) 0;
+}
+
+.glass {
+  justify-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-xs) var(--space-xs) var(--space-2xs);
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--ink) 55%, transparent);
+}
+
+.swatches {
+  display: flex;
+  gap: var(--space-3xs);
+}
+
+/* Each swatch shows its pair: the tint on bone (lower left) under the accent on dark. */
+.swatch {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.swatch::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--s-light) 50%, var(--s-dark) 50%);
+  transition: scale 250ms var(--ease-out);
+}
+
+.swatch::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border: 1.5px solid transparent;
+  border-radius: 50%;
+  transition: border-color 200ms;
+}
+
+.swatch:hover::before {
+  scale: 1.1;
+}
+
+.swatch[aria-checked="true"]::after {
+  border-color: var(--paper);
+}
+
+.swatch:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 1px;
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 4px;
+}
+
+.name {
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-caps);
+  letter-spacing: var(--tracking-caps);
+  line-height: var(--leading-label);
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--paper) 72%, var(--bar));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot,
+  .swatch::before {
+    transition: none;
+  }
+}

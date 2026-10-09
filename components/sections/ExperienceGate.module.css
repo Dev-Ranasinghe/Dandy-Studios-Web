@@ -1,0 +1,236 @@
+/*
+ * The camera's way in and out, drawn as a lens in the house palette: plasma veil, grid,
+ * lilac dot scanline, a reticle that tightens with progress and a Caslon counter.
+ * --p (0..1) is written by the component as the counter eases.
+ */
+
+@property --iris {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+.gate {
+  --p: 0;
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: inherit;
+  color: var(--bone);
+  pointer-events: none;
+  animation: gate-in 420ms var(--ease-out) both;
+}
+
+/* ---------- Veil, grid and scanline ---------- */
+
+.veil {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(to right, color-mix(in oklab, var(--bone) 7%, transparent) 1px, transparent 1px) 0 0 / 12.5% 100%,
+    linear-gradient(to bottom, color-mix(in oklab, var(--bone) 7%, transparent) 1px, transparent 1px) 0 0 / 100% 25%,
+    radial-gradient(70% 70% at 50% 50%, color-mix(in oklab, var(--lavender) 55%, var(--plasma)), var(--plasma) 72%),
+    var(--plasma);
+  /* An iris: the veil has a round hole of radius --iris. */
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent var(--iris), #000 calc(var(--iris) + 0.5%));
+  mask-image: radial-gradient(circle at 50% 50%, transparent var(--iris), #000 calc(var(--iris) + 0.5%));
+}
+
+.scan {
+  position: absolute;
+  inset: -50% 0;
+  background: radial-gradient(circle, var(--lilac) 1px, transparent 1.6px) 0 0 / 6px 6px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 42%, #000 49%, #000 50%, transparent 58%);
+  mask-image: linear-gradient(to bottom, transparent 42%, #000 49%, #000 50%, transparent 58%);
+  opacity: 0.7;
+  animation: sweep 2.4s linear infinite;
+}
+
+/* ---------- Reticle ---------- */
+
+/* Four brackets around the readout; they close in as loading completes, like a lens focusing. */
+.reticle {
+  --arm: 22px;
+  --c: var(--lilac);
+  position: absolute;
+  width: min(440px, 76%);
+  aspect-ratio: 1.45;
+  background:
+    linear-gradient(var(--c), var(--c)) top left / var(--arm) 1.5px,
+    linear-gradient(var(--c), var(--c)) top left / 1.5px var(--arm),
+    linear-gradient(var(--c), var(--c)) top right / var(--arm) 1.5px,
+    linear-gradient(var(--c), var(--c)) top right / 1.5px var(--arm),
+    linear-gradient(var(--c), var(--c)) bottom left / var(--arm) 1.5px,
+    linear-gradient(var(--c), var(--c)) bottom left / 1.5px var(--arm),
+    linear-gradient(var(--c), var(--c)) bottom right / var(--arm) 1.5px,
+    linear-gradient(var(--c), var(--c)) bottom right / 1.5px var(--arm);
+  background-repeat: no-repeat;
+  transform: scale(calc(1.55 - var(--p) * 0.55));
+}
+
+/* ---------- Readout ---------- */
+
+.readout {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.label,
+.stage {
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-caps);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.label {
+  color: var(--lilac);
+}
+
+.stage {
+  min-height: 1.3em;
+  color: color-mix(in oklab, var(--bone) 78%, var(--lilac));
+  font-variant-numeric: tabular-nums;
+}
+
+.count {
+  display: flex;
+  align-items: flex-start;
+  font-family: var(--font-serif), "Times New Roman", serif;
+  font-size: clamp(4.5rem, 3rem + 7vw, 9rem);
+  line-height: 0.9;
+  letter-spacing: var(--tracking-display);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.pct {
+  margin-left: 0.06em;
+  font-size: 0.32em;
+  line-height: 1.4;
+  color: var(--lilac);
+}
+
+.bar {
+  width: 160px;
+  height: 1px;
+  margin-top: 4px;
+  background: linear-gradient(var(--lilac), var(--lilac)) 0 0 / 100% 100% no-repeat,
+    color-mix(in oklab, var(--bone) 18%, transparent);
+  background-size: calc(var(--p) * 100%) 100%, 100% 100%;
+}
+
+/* ---------- Stop: the last camera frame, frozen under the closing iris ---------- */
+
+.shot {
+  position: absolute;
+  inset: 0;
+}
+
+.snapshot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(0.6) contrast(1.05) brightness(0.8);
+  animation: freeze 1s var(--ease-out) both;
+}
+
+.gate[data-mode="stop"] .veil {
+  animation: iris-close 900ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+/* ---------- Exits ---------- */
+
+/* Start: the readout lifts away, the reticle opens to the frame, the iris reveals the camera. */
+.gate[data-mode="start"][data-ending] .readout {
+  animation: lift 360ms var(--ease-out) both;
+}
+
+.gate[data-mode="start"][data-ending] .reticle {
+  transform: scale(2.6);
+  opacity: 0;
+  transition: transform 800ms var(--ease-out), opacity 800ms var(--ease-out);
+}
+
+.gate[data-mode="start"][data-ending] .veil {
+  animation: iris-open 950ms 120ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+/* Stop: once the page has settled, the whole lens fades off the restored hero. */
+.gate[data-mode="stop"][data-ending] {
+  animation: gate-out 450ms var(--ease-out) both;
+}
+
+@keyframes gate-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes gate-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sweep {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(50%);
+  }
+}
+
+@keyframes iris-open {
+  from {
+    --iris: 0%;
+  }
+  to {
+    --iris: 101%;
+  }
+}
+
+@keyframes iris-close {
+  from {
+    --iris: 101%;
+  }
+  to {
+    --iris: 0%;
+  }
+}
+
+@keyframes lift {
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+    filter: blur(4px);
+  }
+}
+
+@keyframes freeze {
+  from {
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gate,
+  .scan,
+  .snapshot,
+  .gate[data-mode="stop"] .veil {
+    animation: none;
+  }
+
+  .reticle {
+    transform: none;
+  }
+}

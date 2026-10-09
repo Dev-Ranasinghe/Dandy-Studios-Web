@@ -1,0 +1,225 @@
+/*
+ * Featured work, after the reference: a dark ground with a faint map (the footer's contour
+ * lines), a thermal glow under the pointer, a tall stacked statement in outline and a tilted
+ * orbit of work passing in front of its last line. All of it follows the accent theme: the
+ * ground leans to the theme's plasma, the lines and the glow take its accent.
+ */
+
+.section {
+  --ground: color-mix(in oklab, var(--plasma) 55%, var(--ink));
+  /* The map's line colour: the theme's accent, faint. */
+  --map-line: color-mix(in oklab, var(--lilac) 16%, transparent);
+  --soft: color-mix(in oklab, var(--bone) 70%, var(--ground));
+  --fs: clamp(2.8rem, 7.6vw, 7.6rem);
+
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: var(--space-xl);
+  padding: var(--section-y) var(--gutter);
+  overflow: hidden;
+  background: var(--ground);
+  color: var(--bone);
+}
+
+/* The map: contour lines, masked from the SVG so they take the theme's accent. */
+.map {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: var(--map-line);
+  -webkit-mask: url("/images/contours.svg") center / cover no-repeat;
+  mask: url("/images/contours.svg") center / cover no-repeat;
+  pointer-events: none;
+}
+
+.heat {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  filter: blur(12px) contrast(1.15);
+  image-rendering: auto;
+  pointer-events: none;
+}
+
+/* ---------- Statement ---------- */
+
+.headline {
+  display: grid;
+  justify-items: center;
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-size: var(--fs);
+  font-weight: 400;
+  line-height: 0.86;
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.line {
+  position: relative;
+  display: block;
+  animation: rise 1100ms var(--ease-out) both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 60%;
+  animation-delay: calc(var(--i) * 60ms);
+}
+
+/*
+ * Outline letters: no fill, only a stroke, so the contour map, the glow and the orbit show
+ * through every glyph. The pointer's wave: --w (0..1, from the letter's distance to the pointer)
+ * stretches the letter up from its baseline and warms its outline from bone to the accent.
+ */
+.letter {
+  --w: 0;
+  display: inline-block;
+  transform-origin: 50% 100%;
+  transform: scaleY(calc(1 + var(--w) * 0.38)) translateY(calc(var(--w) * -0.04em));
+  color: transparent;
+  -webkit-text-stroke: clamp(1px, 0.012em, 2px) color-mix(in oklab, var(--lilac) calc(var(--w) * 100%), var(--bone));
+  will-change: transform;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.3em);
+  }
+}
+
+/* ---------- Orbit ---------- */
+
+/* The ring and the statement it circles share one stage; it bleeds to the section's edges. */
+.orbit {
+  position: relative;
+  z-index: 1;
+  height: clamp(710px, 60vw, 950px);
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+.orbit :global(.orbit-flip-slider-label) {
+  font-family: var(--font-worksans), "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(10px, 0.9vw, 14px);
+  color: var(--bone);
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.6);
+}
+
+.orbit :global(.orbit-flip-slider-card-inner) {
+  background: var(--ink);
+}
+
+/* ---------- Foot ---------- */
+
+.foot {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  align-items: end;
+  gap: var(--space-xl);
+}
+
+.copy {
+  max-width: 34ch;
+  font-family: var(--font-worksans), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-label);
+  line-height: var(--leading-body);
+  color: var(--soft);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-s);
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  border-radius: 8px;
+  font-family: var(--font-label), sans-serif;
+  font-size: var(--text-caps);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  transition: color 250ms, border-color 250ms;
+}
+
+.primary {
+  --glass-tint: var(--bone);
+  color: var(--ink);
+}
+
+.primary svg {
+  width: 16px;
+  height: 16px;
+  transition: translate 300ms var(--ease-out);
+}
+
+.primary:hover {
+  --glass-tint: var(--highlight);
+  color: var(--on-highlight);
+}
+
+.primary:hover svg {
+  translate: 3px 0;
+}
+
+.secondary {
+  border: 1px solid color-mix(in oklab, var(--bone) 60%, transparent);
+  --glass-tint: color-mix(in oklab, var(--bone) 4%, transparent);
+  color: var(--bone);
+}
+
+.secondary:hover {
+  border-color: var(--bone);
+  --glass-tint: color-mix(in oklab, var(--bone) 12%, transparent);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid var(--lilac);
+  outline-offset: 3px;
+}
+
+/* ---------- Tablet ---------- */
+
+@media (max-width: 1100px) {
+  .orbit {
+    height: clamp(590px, 91vw, 850px);
+  }
+
+  .foot {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Phone ---------- */
+
+@media (max-width: 720px) {
+  .section {
+    --fs: clamp(2.5rem, 13vw, 3.8rem);
+  }
+
+  .orbit {
+    height: clamp(520px, 143vw, 670px);
+  }
+
+  .actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line {
+    animation: none;
+  }
+}

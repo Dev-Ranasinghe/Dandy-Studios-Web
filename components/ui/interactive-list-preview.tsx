@@ -390,6 +390,13 @@ export default function InteractiveListPreview({
 
   /** @param {import('react').MouseEvent<HTMLDivElement>} event */
   const onMouseMove = (event: ReactMouseEvent<HTMLDivElement>) => {
+    // A row can miss its mouseenter: the pointer was already resting on it when the page
+    // loaded, or content scrolled under a still pointer. Any movement recovers it.
+    if (activeIndexRef.current === null) {
+      const row = (event.target as Element).closest<HTMLTableRowElement>("tr[data-index]");
+      if (row) onRowEnter(row, Number(row.dataset.index));
+    }
+
     // Reduced-motion: no cursor parallax on the preview images.
     if (reduceMotionRef.current) return;
     if (!imageContainerRef.current) return;
@@ -410,7 +417,7 @@ export default function InteractiveListPreview({
       {!isCoarsePointer && (
       <div
         style={{ backgroundColor: bgColor }}
-        className={`relative w-full overflow-hidden font-mono text-white ${className}`}
+        className={`relative w-full overflow-hidden [font-family:var(--font-label),sans-serif] text-white ${className}`}
         onMouseMove={onMouseMove}
       >
         <div
@@ -457,6 +464,7 @@ export default function InteractiveListPreview({
               {items.map((item: any, index: number) => (
                 <tr
                   key={`${item.client}-${index}`}
+                  data-index={index}
                   onMouseEnter={(event) =>
                     onRowEnter(event.currentTarget, index)
                   }
@@ -490,7 +498,7 @@ export default function InteractiveListPreview({
       )}
 
       {isCoarsePointer && (
-      <div style={{ backgroundColor: bgColor }} className={`w-full font-mono text-white ${className}`}>
+      <div style={{ backgroundColor: bgColor }} className={`w-full [font-family:var(--font-label),sans-serif] text-white ${className}`}>
         {items.map((item: any, index: number) => (
           <div key={`${item.client}-${index}`} className="flex border-b border-white/10">
             <div className="flex w-1/2 flex-col justify-between gap-3 p-4">

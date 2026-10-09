@@ -1,0 +1,71 @@
+/*
+ * The pin: one screen of stage plus the scroll distance the snake needs to cross it.
+ * The stage sticks while the extra height scrolls past.
+ */
+.pin {
+  position: relative;
+  height: 300svh;
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: clip;
+  background: #f4f3f1;
+}
+
+/*
+ * The sun (components/ui/orb-shader.tsx): only the orb, no ground, rising from the stage's
+ * top-left corner and cropped by the page's edges there. --sun-r is its body radius; the canvas
+ * is 2.7 × 2.6 radii (SUN_BOX_W / SUN_BOX_H in the shader) so its halo fades out inside it.
+ */
+.orb {
+  --sun-r: clamp(165px, 20.5vw, 340px);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: calc(var(--sun-r) * 2.7);
+  height: calc(var(--sun-r) * 2.6);
+  pointer-events: none;
+}
+
+/*
+ * Layers: the sun, the snake, then the text. The text deliberately forms no stacking context of its
+ * own, so its words can blend against the snake and invert.
+ */
+.content {
+  position: relative;
+  height: 100%;
+}
+
+/* No pinned scroll for reduced motion: the section sits in the flow with the snake at rest. */
+@media (prefers-reduced-motion: reduce) {
+  .pin {
+    height: auto;
+  }
+
+  .stage {
+    position: relative;
+  }
+}
+
+.snake {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  fill: #0e0d0c;
+}
+
+.tongue {
+  fill: none;
+  stroke: #0e0d0c;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}

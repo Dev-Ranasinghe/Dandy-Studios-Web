@@ -1,0 +1,418 @@
+/*
+ * The work index: two dark panels on bone, after the reference. Panels use the footer's
+ * ink-toward-lavender; bone type, lilac for the chosen state. The pieces panel runs as long
+ * as there are pieces and scrolls with the page; the sidebar holds still beside it (sticky,
+ * never scrolling itself) and is released at the end, so both panels finish level.
+ */
+
+.bento {
+  --panel: color-mix(in oklab, var(--ink) 90%, var(--lavender));
+  --line: color-mix(in oklab, var(--bone) 12%, transparent);
+  --soft: color-mix(in oklab, var(--bone) 64%, var(--panel));
+  --gap: clamp(10px, 1.1vw, 18px);
+
+  /* Room above the index for the floating bar when the section arrives. */
+  --stick: calc(var(--nav-h) + clamp(18px, 2.4vw, 36px));
+
+  display: grid;
+  grid-template-columns: minmax(280px, 22%) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--gap);
+  padding: var(--stick) var(--gap) var(--gap);
+  color: var(--bone);
+}
+
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+  /* Holds a gap from the top, as in the reference (the bar hides while scrolling down), and
+     stands a full screen tall without scrolling itself: the CTA sits at its foot. */
+  position: sticky;
+  top: var(--gap);
+  display: flex;
+  flex-direction: column;
+  height: calc(100svh - var(--gap) * 2);
+  padding: clamp(20px, 2vw, 32px) clamp(14px, 1.4vw, 22px);
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.brand {
+  padding: 0 8px;
+  margin-bottom: var(--space-l);
+  font-family: var(--font-serif), "Times New Roman", serif;
+  font-size: clamp(1.9rem, 1rem + 1.5vw, 2.75rem);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+}
+
+.brandMark {
+  display: none;
+}
+
+.groupLabel {
+  margin: 0 0 var(--space-s);
+  padding: 0 8px;
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-caps);
+  font-weight: 400;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.cats {
+  display: grid;
+  gap: 2px;
+  margin-bottom: var(--space-l);
+}
+
+.cat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--bone);
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(0.875rem, 0.8rem + 0.15vw, 1rem);
+  --glass-tint: color-mix(in oklab, var(--bone) 6%, transparent);
+  letter-spacing: var(--tracking-label);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 200ms, border-color 200ms, color 200ms;
+}
+
+.cat svg {
+  flex: none;
+  width: 19px;
+  height: 19px;
+  color: var(--soft);
+  transition: color 200ms;
+}
+
+/* The glass only comes up under the hovered and the chosen discipline, so the list stays a list. */
+.cat > :global(.glass-layer) {
+  opacity: 0;
+}
+
+.cat:hover:not(:disabled) > :global(.glass-layer),
+.cat[aria-pressed="true"] > :global(.glass-layer) {
+  opacity: 1;
+}
+
+.cat[aria-pressed="true"] {
+  border-color: var(--line);
+  --glass-tint: color-mix(in oklab, var(--bone) 10%, transparent);
+}
+
+.cat[aria-pressed="true"] svg {
+  color: var(--lilac);
+}
+
+.cat:disabled {
+  color: var(--soft);
+  cursor: default;
+}
+
+.catLabel {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.soon {
+  flex: none;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-size: 10px;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.elsewhere {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--space-m);
+  padding: 0 8px;
+}
+
+.elsewhere a {
+  display: inline-block;
+  padding: 8px 0;
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-label);
+  color: var(--soft);
+  transition: color 200ms;
+}
+
+.elsewhere a:hover {
+  color: var(--bone);
+}
+
+.cta {
+  display: grid;
+  gap: var(--space-s);
+  margin-top: auto;
+  padding-top: var(--space-xl);
+  text-align: center;
+}
+
+.cta p {
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-caps);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.ctaButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  border-radius: 8px;
+  --glass-tint: var(--bone);
+  color: var(--ink);
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-caps);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.ctaButton svg {
+  width: 16px;
+  height: 16px;
+  transition: translate 300ms var(--ease-out);
+}
+
+.ctaButton:hover svg {
+  translate: 3px 0;
+}
+
+.cat:focus-visible,
+.elsewhere a:focus-visible,
+.ctaButton:focus-visible {
+  outline: 2px solid var(--lilac);
+  outline-offset: 2px;
+}
+
+/* ---------- Panel of pieces ---------- */
+
+.panel {
+  /* At least as tall as the sidebar, so a short filter still finishes level with it. */
+  min-height: calc(100svh - var(--gap) * 2);
+  padding: var(--gap);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-l) var(--gap);
+}
+
+.piece figure {
+  margin: 0;
+}
+
+.media {
+  position: relative;
+  aspect-ratio: 16 / 10.5;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--ink);
+}
+
+.media img,
+.media video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media img {
+  transition: scale 900ms var(--ease-out);
+}
+
+.media video {
+  opacity: 0;
+  transition: opacity 400ms var(--ease-out);
+}
+
+.media[data-playing] video {
+  opacity: 1;
+}
+
+.media:hover img {
+  scale: 1.03;
+}
+
+.caption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 10px 0;
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+}
+
+.title {
+  font-size: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  white-space: nowrap;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tag {
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--bone) 5%, transparent);
+  font-size: 13px;
+  color: var(--soft);
+  white-space: nowrap;
+}
+
+.index {
+  margin-left: auto;
+  font-size: var(--text-caps);
+  letter-spacing: var(--tracking-caps);
+  color: var(--soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- Narrower screens ---------- */
+
+@media (max-width: 1080px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/*
+ * Phones, after the reference: the sidebar folds to a rail of icons beside the pieces, and
+ * the page itself scrolls (the panel no longer holds its own scroll).
+ */
+@media (max-width: 720px) {
+  .bento {
+    --stick: calc(var(--nav-h) + var(--space-l));
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  /* A rail of icons, still a full screen tall and holding near the top like the desktop sidebar. */
+  .sidebar {
+    align-items: center;
+    padding: var(--space-m) 0;
+    border-radius: 10px;
+  }
+
+  .brand {
+    margin-bottom: var(--space-l);
+    padding: 0;
+  }
+
+  .brandFull,
+  .groupLabel,
+  .catLabel,
+  .soon,
+  .elsewhere,
+  .cta {
+    display: none;
+  }
+
+  .brandMark {
+    display: inline;
+    font-size: 1.9rem;
+  }
+
+  .cats {
+    gap: var(--space-2xs);
+    margin: 0;
+  }
+
+  .cat {
+    justify-content: center;
+    width: 48px;
+    padding: 0;
+  }
+
+  .cat svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .cat:disabled svg {
+    opacity: 0.5;
+  }
+
+  .panel {
+    min-height: 0;
+    border-radius: 10px;
+  }
+
+  /* One row, as in the reference: title, then tags (clipped with a fade if they run long), number right. */
+  .caption {
+    gap: 8px;
+    padding: 12px 6px 0;
+  }
+
+  .title {
+    font-size: 15px;
+  }
+
+  .tags {
+    flex-wrap: nowrap;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent);
+  }
+
+  .tag {
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+
+  .index {
+    flex: none;
+    font-size: 11px;
+  }
+}
+
+/* Short screens: the sidebar sheds its secondary links so everything still fits, unscrolled. */
+@media (min-width: 721px) and (max-height: 820px) {
+  .brand {
+    margin-bottom: var(--space-m);
+  }
+
+  .cat {
+    min-height: 40px;
+  }
+
+  .elsewhere,
+  .groupLabel:has(+ .elsewhere) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media img,
+  .media video {
+    transition: none;
+  }
+}

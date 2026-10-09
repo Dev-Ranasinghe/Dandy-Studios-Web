@@ -1,0 +1,278 @@
+.section {
+  --bone: #f4f3f1;
+  --ink: #0e0d0c;
+  --muted: color-mix(in oklab, var(--ink) 48%, var(--bone));
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-drop: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  display: grid;
+  justify-items: center;
+  gap: var(--stack-gap);
+  /* The usual section space plus extra above and below, so the closing CTA stands clear of the
+     crowd above and the footer below. */
+  padding: calc(var(--section-y) + clamp(40px, 7vh, 88px)) var(--gutter);
+  overflow: hidden;
+  /* Transparent over the page's paper, so the plasma above can fade out behind the label.
+     Positioned so its content paints above that fade. */
+  position: relative;
+  z-index: 1;
+  color: var(--ink);
+  text-align: center;
+}
+
+.section ::selection {
+  background: var(--ink);
+  color: var(--bone);
+}
+
+/* ---------- ( Seriously ) ---------- */
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-label);
+  line-height: var(--leading-label);
+  letter-spacing: var(--tracking-label);
+  word-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.arrow {
+  width: 1em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The arrows point at what's coming, nudging down on a loop. */
+.section[data-shown="true"] .arrow {
+  animation: nudge 2.4s var(--ease-out) 1.6s infinite;
+}
+
+.arrow:last-child {
+  animation-delay: 1.72s !important;
+}
+
+@keyframes nudge {
+  0%, 60%, 100% { translate: 0 0; }
+  20% { translate: 0 0.22em; }
+  40% { translate: 0 -0.04em; }
+}
+
+/* ---------- Headline ---------- */
+
+.heading {
+  display: grid;
+  margin: 0;
+  font-family: var(--font-serif), "Times New Roman", serif;
+  font-size: clamp(3rem, 9.5vw, 8.5rem);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+}
+
+/* Each line rises out of its own mask. */
+.line {
+  display: block;
+  overflow: clip;
+  overflow-clip-margin: 0.25em;
+  padding-bottom: 0.06em;
+}
+
+.rise {
+  display: inline-block;
+  translate: 0 108%;
+  transition: translate 1000ms var(--ease-out);
+}
+
+.line:nth-child(2) .rise {
+  transition-delay: 110ms;
+}
+
+.section[data-shown="true"] .rise {
+  translate: 0 0;
+}
+
+/* "BS." is drawn twice and clipped into halves, so the slash can split it. */
+.cut {
+  position: relative;
+  display: inline-block;
+}
+
+.lower {
+  display: inline-block;
+  clip-path: inset(54% -0.1em -0.2em -0.1em);
+}
+
+.upper {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(-0.2em -0.1em 46% -0.1em);
+  transition: translate 700ms var(--ease-out) 1250ms, rotate 700ms var(--ease-out) 1250ms;
+}
+
+.section[data-shown="true"] .upper {
+  translate: 0.05em -0.015em;
+  rotate: -1.4deg;
+}
+
+.section[data-shown="true"] .lower {
+  translate: -0.015em 0.01em;
+  transition: translate 700ms var(--ease-out) 1250ms;
+}
+
+.slash {
+  position: absolute;
+  top: 50%;
+  left: -8%;
+  width: 116%;
+  height: 0.04em;
+  background: var(--ink);
+  transform-origin: 0 50%;
+  rotate: -3deg;
+  scale: 0 1;
+  opacity: 0;
+}
+
+.section[data-shown="true"] .slash {
+  animation: slash 560ms var(--ease-out) 950ms both;
+}
+
+@keyframes slash {
+  0% { scale: 0 1; opacity: 1; }
+  55% { scale: 1 1; opacity: 1; }
+  100% { scale: 1 1; opacity: 0; }
+}
+
+.emoji {
+  display: inline-block;
+  width: 1em;
+  height: auto;
+  margin-left: 0.1em;
+  vertical-align: -0.06em;
+  translate: 0 -120%;
+  rotate: -18deg;
+  scale: 0.5;
+  opacity: 0;
+  transform-origin: 50% 100%;
+  transition:
+    translate 800ms var(--ease-drop) 1500ms,
+    rotate 800ms var(--ease-drop) 1500ms,
+    scale 800ms var(--ease-drop) 1500ms,
+    opacity 200ms linear 1500ms;
+}
+
+.section[data-shown="true"] .emoji {
+  translate: 0 0;
+  rotate: 0deg;
+  scale: 1;
+  opacity: 1;
+}
+
+/* ---------- Button ---------- */
+
+.actions {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 14px;
+  opacity: 0;
+  translate: 0 12px;
+  transition:
+    opacity 700ms var(--ease-out) 700ms,
+    translate 700ms var(--ease-out) 700ms;
+}
+
+.section[data-shown="true"] .actions {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75em;
+  min-height: 48px;
+  padding: 0.95em 1.4em;
+  border-radius: 10px;
+  --glass-tint: var(--ink); /* solid behind the label, clearing at the rim (.glass-solid) */
+  color: var(--bone);
+  font-family: var(--font-label), "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--text-caps);
+  line-height: var(--leading-label);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  transition: scale 300ms var(--ease-out);
+}
+
+.buttonArrow {
+  width: 1.1em;
+  height: 1.1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: translate 400ms var(--ease-out);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+.button:active {
+  scale: 0.97;
+}
+
+@media (hover: hover) {
+  .button:hover {
+    --glass-tint: color-mix(in oklab, var(--ink) 82%, var(--lavender));
+  }
+
+  .button:hover .buttonArrow {
+    translate: 0.3em 0;
+  }
+}
+
+/* A typing cursor after the button, as if the quote is being written. */
+.cursor {
+  width: 12px;
+  height: 12px;
+  margin-bottom: 2px;
+  border-radius: 3px;
+  background: var(--ink);
+  animation: blink 1.1s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .upper,
+  .lower,
+  .emoji,
+  .actions {
+    translate: none;
+    rotate: none;
+    scale: none;
+    opacity: 1;
+    transition: none;
+  }
+
+  .slash,
+  .arrow,
+  .cursor {
+    animation: none;
+  }
+
+  .slash {
+    display: none;
+  }
+}

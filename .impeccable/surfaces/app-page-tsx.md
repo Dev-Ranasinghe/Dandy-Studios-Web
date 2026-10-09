@@ -2,23 +2,25 @@
 version: 1
 slug: "app-page-tsx"
 primary_target: "app/page.tsx"
-related_targets: ["components/sections/HeroSection.tsx"]
+related_targets: ["components/sections/HeroSection.tsx","components/ui/hero-cursor-field.tsx"]
 ---
 
 # Homepage hero
 
-Scope: first viewport of `/`, above the video grid. Mode: Experience. Build path: code-led (no image generation). Extends the incumbent world; no new identity.
+Scope: first viewport of `/`, above the video grid. Mode: Experience. Build path: code-led (no image generation). Direction is brief-pinned: the user supplied reference screenshots (desktop, camera state, 440×956 phone) and asked for that exact UI; no concept roll. The global SiteHeader stays as it is and floats above the frame.
 
 ## Direction contract
 
-THESIS: The studio's roles as architecture: three rows of wall-to-wall type that the founder's portrait literally stands inside. Refuses the headline-plus-subcopy-plus-button hero.
+THESIS: The hero is a framed screen, a viewfinder the visitor can step into. Three rows of wall-to-wall condensed type sit on a dusk-maroon field; switching EXPERIENCE on puts the visitor's own camera behind that type, under a grid. Refuses the static headline-plus-image hero.
 
-OWN-WORLD: Night ground (#0b0b0b), paper type (#f3eee9), neon (#8cff32) as the single charged color: the middle row and the menu disc. Tanker display, Switzer text. Hairline column grid in paper at low alpha. The portrait stays an untouched print: white sheet, sketch grain, red rose.
+OWN-WORLD: Charcoal outer ground, one rounded frame. Inside: gradient from near-black brown (left) to dusty rose (right), faint hairline grid with small squares at crossings, film grain. Cream type (Tanker display, Switzer text, uppercase, tight). Signal red is the only charged colour: the cursor's dot-grid spotlight, its ring, the ACTIVE state. Founder cutout multiplied into the rose side.
 
-STORY: Who (Dandy Studios, top-left), what (developer, designer, creative), whose hand (portrait), when (live clock).
+STORY: Who (Dandy Studios, via the header and ©2026 line), what (web design & development), the promise (I DESIGN WEBSITES WITH EMOTION), live proof of craft (cursor field, camera mode), one action (send a project brief).
 
-FIRST VIEWPORT: Wordmark, neon menu disc, three rows filling the height, portrait between rows one and three, clock strip at the base.
+FIRST VIEWPORT: Clock strip across the frame top; EXPERIENCE and SOUND controls top-right; [001.1] role in two display lines left, [001.2] line of copy centre, ©2026 right, hairline; three-line headline filling the lower two thirds; the CTA pill docked at the end of the last line; the portrait on the right behind the type. Phone: headline first in two lines, roles and copy stacked, blurred portrait behind, CTA centred at the base.
 
-SIGNATURE: Rows drift in alternating directions; scroll speed pushes them and scrolling up reverses them.
+FORM: Brief-pinned reference rebuild (user screenshots); no seed key, direction pinned by the brief.
 
-RISK: Rows at this scale can overwhelm small screens; the size is clamped by viewport height and width.
+SIGNATURE: A red dot-matrix spotlight trails the pointer with a ring cursor; in camera mode MediaPipe hand tracking draws the hand's joints and the index fingertip drives an enlarged spotlight.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
