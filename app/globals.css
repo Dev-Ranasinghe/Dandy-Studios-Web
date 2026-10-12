@@ -420,3 +420,9 @@ body {
     --hud-h: 36px;
   }
 }
+
+/* The home hero: a thinner bar (its 40px keys keep 4px of glass around them), so the poster
+   type gets the height back. Everything that follows the bar reads the same token. */
+html:has(section[data-hero]) {
+  --nav-h: 48px;
+}

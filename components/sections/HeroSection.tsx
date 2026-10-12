@@ -1,27 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import cutout from "@/public/images/portrait-cutout.webp";
 import HeroCursorField, { type CursorFieldHandle } from "@/components/ui/hero-cursor-field";
 import HeroCamera, { type CameraStatus, type StartStage } from "./HeroCamera";
 import ExperienceGate from "./ExperienceGate";
+import HeroSnake from "./HeroSnake";
 import { MENU_OPEN_EVENT } from "@/components/SiteHeader";
+import { ACCENTS, setAccent, useAccentName, type Accent } from "@/lib/accent";
 import { onSoundChange, toggleSound as toggleMusic, tick } from "@/lib/hero-sound";
 import { wait, whenSettled } from "@/lib/settle";
-import GlassLayer from "@/components/ui/GlassLayer";
 import { SCROLL_HELD_ATTR } from "@/components/SmoothScroll";
 import styles from "./HeroSection.module.css";
-
-const COLUMNS = 8;
-const ROWS = 4;
-// Grid crossings that carry a small square, as in the reference: [column line, row line].
-const MARKS = [
-  [6, 1],
-  [5, 2],
-  [6, 3],
-  [4, 3],
-];
 
 // The shortest the lens stays up on the way in and out; each also waits for the page to settle.
 const BOOT_MS = 1800;
@@ -61,12 +50,12 @@ function snapshotOf(video: HTMLVideoElement | null | undefined) {
 const SCROLL_KEYS = new Set(["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "]);
 
 const STATUS_LABEL: Record<CameraStatus, string> = {
-  off: "Off",
-  starting: "Starting",
-  active: "Active",
-  blocked: "Blocked",
-  missing: "No camera",
-  unsupported: "Unavailable",
+  off: "off",
+  starting: "starting",
+  active: "on",
+  blocked: "blocked",
+  missing: "no camera",
+  unsupported: "unavailable",
 };
 
 const STATUS_NOTE: Partial<Record<CameraStatus, string>> = {
@@ -75,16 +64,14 @@ const STATUS_NOTE: Partial<Record<CameraStatus, string>> = {
   unsupported: "This browser can't open the camera here.",
 };
 
-/** "GMT + 5:30" for any IANA zone (or the visitor's own), from the zone's current offset. */
-function gmtLabel(date: Date, timeZone?: string) {
-  const part = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "shortOffset" })
-    .formatToParts(date)
-    .find((p) => p.type === "timeZoneName")?.value;
-  const [, sign = "+", rest = "0"] = part?.match(/GMT([+-])?(.*)/) ?? [];
-  return `GMT ${sign} ${rest || "0"}`;
-}
+/** "2:34 pm" for any IANA zone (or the visitor's own). */
+const clock = (date: Date, timeZone?: string) =>
+  new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", minute: "2-digit", hour12: true })
+    .format(date)
+    .toLowerCase();
 
-function useNow() {
+/** The ticking clocks on their own, so only these lines re-render. */
+function Clocks() {
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
     const update = () => setNow(new Date());
@@ -92,41 +79,39 @@ function useNow() {
     const id = window.setInterval(update, 1000);
     return () => window.clearInterval(id);
   }, []);
-  return now;
-}
-
-/** The ticking clocks on their own, so only this strip re-renders every second. */
-function Clocks() {
-  const now = useNow();
-  const time = (timeZone?: string) =>
-    now
-      ? new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(now)
-      : "--:--:--";
-
   return (
-    <p className={styles.clocks}>
-      <span>
-        <span className={styles.dim}>Local hour:</span>{" "}
-        <time suppressHydrationWarning>
-          {time()} [{now ? gmtLabel(now) : "GMT"}]
-        </time>
+    <p className={`${styles.group} ${styles.clocks}`}>
+      <span className={styles.pair}>
+        <span className={styles.key}>local:</span>
+        <time suppressHydrationWarning>{now ? clock(now) : "--:--"}</time>
       </span>
-      <span>
-        <span className={styles.dim}>USA hour:</span>{" "}
-        <time suppressHydrationWarning>
-          {time("America/New_York")} [{now ? gmtLabel(now, "America/New_York") : "GMT"}]
-        </time>
+      <span className={styles.pair}>
+        <span className={styles.key}>new york:</span>
+        <time suppressHydrationWarning>{now ? clock(now, "America/New_York") : "--:--"}</time>
       </span>
     </p>
   );
 }
 
-function SoundBars({ on }: { on: boolean }) {
+const THEMES = Object.keys(ACCENTS) as Accent[];
+
+/** "©26": the current year, so the tag never goes stale. */
+function Year() {
+  return <span suppressHydrationWarning>[©{String(new Date().getFullYear()).slice(-2)}]</span>;
+}
+
+/** The poster's words, placed by CSS. Rendered once as the type and twice for the glitch. */
+function Words({ className, "data-ghost": ghost }: { className: string; "data-ghost"?: string }) {
   return (
-    <span className={styles.bars} data-on={on} aria-hidden="true">
-      {[0, 1, 2, 3, 4].map((i) => (
-        <span key={i} style={{ "--b": i } as React.CSSProperties} />
-      ))}
+    <span className={className} data-ghost={ghost} aria-hidden="true">
+      <span className={styles.word} data-w="more">More</span>
+      <span className={styles.word} data-w="dandy">Dandy</span>
+      <span className={styles.word} data-w="yyy">yyy</span>
+      <span className={styles.word} data-w="less">Less</span>
+      <span className={styles.word} data-w="ordin">
+        <span className={styles.ring}>O</span>rdin
+      </span>
+      <span className={styles.word} data-w="aryyy">aryyy</span>
     </span>
   );
 }
@@ -148,6 +133,11 @@ export default function HeroSection() {
   cameraLiveRef.current = experience && !shuttingRef.current;
 
   const cameraOn = camera === "starting" || camera === "active";
+  const theme = useAccentName();
+  const nextTheme = () => {
+    tick(1180, 0.06);
+    setAccent(THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length]);
+  };
   const note = STATUS_NOTE[camera];
 
   /*
@@ -239,7 +229,7 @@ export default function HeroSection() {
 
   /*
    * The camera is for the hero only. While it runs (or starts), the first attempt to leave
-   * (any link or button outside the hero's own switches, a scroll, the menu) is held and
+   * (any link or button outside the hero's `free` switches, a scroll, the menu) is held and
    * turned into a shutdown; the click is replayed once the page is back to normal.
    */
   useEffect(() => {
@@ -251,7 +241,7 @@ export default function HeroSection() {
     const onClick = (e: MouseEvent) => {
       if (!holding()) return;
       const el = (e.target as Element | null)?.closest<HTMLElement>("a, button");
-      if (!el || (section?.contains(el) && el.closest(`.${styles.controls}`))) return;
+      if (!el || (section?.contains(el) && el.closest(`.${styles.free}`))) return;
       e.preventDefault();
       e.stopPropagation();
       shutDown(el);
@@ -294,17 +284,6 @@ export default function HeroSection() {
   return (
     <section ref={sectionRef} className={styles.hero} aria-label="Dandy Studios" data-hero data-scene="Opening">
       <div ref={frameRef} className={styles.frame} data-camera={camera === "active" || undefined}>
-        {/* Ground: dusk gradient and the founder, multiplied into it. */}
-        <div className={styles.field} aria-hidden="true">
-          <Image
-            src={cutout}
-            alt=""
-            priority
-            className={styles.figure}
-            sizes="(max-width: 720px) 110vw, 46vw"
-          />
-        </div>
-
         {experience && (
           <HeroCamera
             onStatus={onStatus}
@@ -316,13 +295,62 @@ export default function HeroSection() {
           />
         )}
 
-        <div className={styles.grid} aria-hidden="true" style={{ "--cols": COLUMNS, "--rows": ROWS } as React.CSSProperties}>
-          {MARKS.map(([c, r]) => (
-            <span key={`${c}-${r}`} style={{ "--c": c, "--r": r } as React.CSSProperties} />
-          ))}
+        <HeroCursorField ref={fieldRef} host={frameRef} wide={camera === "active"} className={styles.cursorField} />
+
+        {/* The poster: the studio's line broken across the screen, the snake crawling through it. */}
+        <h1 className={styles.type}>
+          <span className="sr-only">More Dandyyy. Less Ordinaryyy.</span>
+          <Words className={styles.words} />
+          {/* Two torn copies, shown only in the glitch's brief bursts. */}
+          <Words className={`${styles.words} ${styles.ghost}`} data-ghost="a" />
+          <Words className={`${styles.words} ${styles.ghost}`} data-ghost="b" />
+          <HeroSnake
+            className={styles.snake}
+            bodyClass={styles.snakeBody}
+            blur={0.014}
+          />
+        </h1>
+
+        <div className={styles.notes}>
+          <p className={styles.pitch}>
+            <span className={styles.glyph} aria-hidden="true">&gt;&gt;</span>
+            <span className={styles.lines}>
+              <span>i design + build</span>
+              <span>websites for brands</span>
+              <span>that want to be</span>
+              <span>felt, not just seen</span>
+            </span>
+          </p>
+
+          <span className={styles.slash} aria-hidden="true">://</span>
+
+          <ul className={styles.tags}>
+            <li data-t="role">
+              creative
+              <br />
+              branding
+            </li>
+            <li data-t="year">
+              <Year />
+            </li>
+            <li data-t="design">
+              <span className={styles.glyph} aria-hidden="true">&gt;&gt;</span>
+              <span>
+                designin&rsquo;
+                <br />
+                websites
+              </span>
+            </li>
+            <li data-t="build">
+              <span className={styles.glyph} aria-hidden="true">://</span>
+              <span>
+                buildin&rsquo;
+                <br />
+                feelings
+              </span>
+            </li>
+          </ul>
         </div>
-        <div className={styles.grain} aria-hidden="true" />
-        <div className={styles.corners} aria-hidden="true" />
 
         {gate && (
           <ExperienceGate
@@ -335,93 +363,62 @@ export default function HeroSection() {
           />
         )}
 
-        <HeroCursorField
-          ref={fieldRef}
-          host={frameRef}
-          wide={camera === "active"}
-          className={styles.cursorField}
-        />
+        <div className={styles.corners} aria-hidden="true" />
 
-        {/* The floating site header sits over this row, at the top of the frame; the clock strip follows. */}
-        <div className={styles.navSpace} aria-hidden="true" />
-
-        <div className={styles.strip}>
-          <Clocks />
-          <p className={styles.touch}>
-            <span className={styles.dim}>Get in touch:</span> <a href="/contact">Start a project</a>
-          </p>
-        </div>
-
-        <div className={styles.controls}>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={cameraOn}
-            aria-describedby={note ? "hero-camera-note" : undefined}
-            className={styles.switch}
-            onClick={toggleExperience}
-            onPointerEnter={() => tick()}
-            data-state={camera}
-          >
-            <span className={styles.switchText}>
-              <span className={styles.switchName}>Experience</span>
-              <span className={styles.switchValue} aria-live="polite">
-                {STATUS_LABEL[camera]}
+        {/* The foot: the hero's own switches and clocks, set as plain lines of type. */}
+        <div className={styles.foot}>
+          <div className={`${styles.group} ${styles.controls} ${styles.free}`}>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={sound}
+              className={styles.pair}
+              onClick={toggleSound}
+              onPointerEnter={() => tick()}
+            >
+              <span className={styles.key}>sound</span>
+              <span className={styles.value}>[{sound ? "on" : "off"}]</span>
+            </button>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={cameraOn}
+              aria-describedby={note ? "hero-camera-note" : undefined}
+              className={styles.pair}
+              onClick={toggleExperience}
+              onPointerEnter={() => tick()}
+              data-state={camera}
+            >
+              <span className={styles.key}>camera</span>
+              <span className={styles.value} aria-live="polite">
+                [{STATUS_LABEL[camera]}]
               </span>
-            </span>
-            <span className={`${styles.track} glass-host`} aria-hidden="true">
-              <GlassLayer />
-              <span className={styles.knob} />
-            </span>
-          </button>
-
-          <button
-            type="button"
-            role="switch"
-            aria-checked={sound}
-            className={styles.sound}
-            onClick={toggleSound}
-            onPointerEnter={() => tick()}
-          >
-            <SoundBars on={sound} />
-            <span className={styles.switchText}>
-              <span className={styles.switchName}>Sound</span>
-              <span className={styles.switchValue}>{sound ? "On" : "Off"}</span>
-            </span>
-          </button>
-
-          {note && (
-            <p id="hero-camera-note" className={styles.note} role="status">
-              {note}
-            </p>
-          )}
-        </div>
-
-        <div className={styles.intro}>
-          <div className={styles.role}>
-            <p className={styles.index}>[ 001.1 ]</p>
-            <p className={styles.roleTitle}>
-              Creative Branding{" "}
-              <br />
-              Agency
-            </p>
+            </button>
+            {note && (
+              <p id="hero-camera-note" className={styles.note} role="status">
+                {note}
+              </p>
+            )}
           </div>
-          <div className={styles.pitch}>
-            <p className={styles.index}>[ 001.2 ]</p>
-            <p className={styles.pitchText}>
-              I design and build websites for brands that want to be felt, not just seen: strategy, interface and
-              code from one studio.
-            </p>
+
+          <Clocks />
+
+          <div className={`${styles.group} ${styles.corner}`}>
+            <button
+              type="button"
+              className={`${styles.pair} ${styles.free}`}
+              onClick={nextTheme}
+              onPointerEnter={() => tick()}
+              aria-label={`Colour theme: ${ACCENTS[theme].label}. Switch to ${ACCENTS[THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length]].label}`}
+            >
+              <span className={styles.key}>theme</span>
+              <span className={styles.value}>[{ACCENTS[theme].label.toLowerCase()}]</span>
+            </button>
           </div>
-          <p className={styles.copyright}>©2026 Dandy Studios</p>
         </div>
 
-        <div className={styles.head}>
-          <h1 className={styles.headline}>
-            <span className={styles.line}>More Dandyyy. </span>
-            <span className={styles.line}>Less Ordinaryyy.</span>
-          </h1>
-        </div>
+        {/* The tube: scan lines, an aperture grille and a dark rim over everything. */}
+        <div className={styles.screen} aria-hidden="true" />
       </div>
     </section>
   );

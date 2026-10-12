@@ -123,9 +123,11 @@ export function drawSnake(g: Geometry, headY: number) {
   const neck = pointAt(g, headS);
   const ahead = pointAt(g, headS - 1);
   const angle = (Math.atan2(ahead.x - neck.x, neck.y - ahead.y) * 180 * 0.3) / Math.PI;
-  const head = `translate(${neck.x.toFixed(1)} ${neck.y.toFixed(1)}) rotate(${angle.toFixed(1)}) scale(${(g.thick / 20.9).toFixed(3)})`;
+  const scale = g.thick / 20.9;
+  const head = `translate(${neck.x.toFixed(1)} ${neck.y.toFixed(1)}) rotate(${angle.toFixed(1)}) scale(${scale.toFixed(3)})`;
 
-  return { body, head };
+  // `pose` is the head transform as numbers, for canvas drawing (angle in degrees).
+  return { body, head, pose: { x: neck.x, y: neck.y, angle, scale } };
 }
 
 /**

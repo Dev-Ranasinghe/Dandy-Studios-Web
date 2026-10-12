@@ -197,6 +197,16 @@ const HeroCursorField = forwardRef<CursorFieldHandle, Props>(function HeroCursor
         trail.length = 0;
         return;
       }
+      // A resting pointer: once the spot has caught up, every frame would be the same picture.
+      // Leave it on the canvas and sleep until the pointer moves again (onMove wakes it).
+      const resting =
+        goal && !hand && strength > 0.995 && Math.abs(goalRadius - radius) < 0.5 &&
+        trail.length >= (reduce ? 1 : TRAIL) &&
+        trail.every((p) => Math.abs(p.x - goal.x) < 0.3 && Math.abs(p.y - goal.y) < 0.3);
+      if (resting) {
+        running = false;
+        return;
+      }
       frame = requestAnimationFrame(draw);
     };
 

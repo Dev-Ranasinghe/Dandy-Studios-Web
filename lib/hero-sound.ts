@@ -9,6 +9,8 @@
 export type Track = { src: string; title: string };
 
 export const TRACKS: Track[] = [
+  // The main song: Drinkee, cut to start at 1:17.
+  { src: "/audio/main.mp3", title: "Drinkee — Sofi Tukker" },
   { src: "/audio/track-01.mp3", title: "Piano background — arpmedia" },
   { src: "/audio/track-02.mp3", title: "Background music — absolutesound" },
   { src: "/audio/track-03.mp3", title: "Titanium — Alegend" },

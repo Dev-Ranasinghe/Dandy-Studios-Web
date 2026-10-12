@@ -1,0 +1,71 @@
+/*
+ * The loading screen (components/SiteLoader.tsx). The ice is WebGL and takes the accent from
+ * lib/accent-palette.ts in the hero's own colours: ink-lavender ground, lavender ice, lilac light.
+ * This file restyles the preloader's type into the house style (Caslon counter and wordmark, the
+ * label face for the instruction) and fades the accepted ring's flash off the page.
+ */
+
+.loader {
+  --ground-0: color-mix(in oklab, var(--ink) 88%, var(--lavender));
+
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  height: 100dvh;
+}
+
+/* Covers the page until the first GL frames land; dropped once the gate opens to the pointer. */
+.loader[data-phase="loading"] {
+  background: var(--ground-0);
+}
+
+.loader :global(.zmp-mark) {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-display);
+  color: var(--bone);
+  font-size: clamp(3.25rem, 10vw, 9rem);
+  text-shadow: 0 2px 30px color-mix(in oklab, var(--plasma) 45%, transparent) !important;
+}
+
+.loader :global(.zmp-hud) {
+  font-family: var(--font-label);
+  font-weight: 400;
+  font-size: var(--text-caps);
+  letter-spacing: var(--tracking-caps);
+  line-height: var(--leading-label);
+  color: var(--bone);
+  text-shadow: 0 1px 14px color-mix(in oklab, var(--plasma) 70%, transparent);
+}
+
+.loader :global(.zmp-hud + .zmp-hud) {
+  color: var(--lilac);
+}
+
+/* ---------- Handoff ---------- */
+
+/* The ring's flash, fading off the page. */
+.handoff {
+  position: absolute;
+  inset: 0;
+  background: var(--lilac);
+  animation: fade var(--handoff-ms) var(--ease-out) forwards;
+}
+
+@keyframes fade {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .handoff {
+    animation-duration: 250ms;
+  }
+}
+
+/* Already played this session: never painted, even before the script removes it. */
+:global(html[data-site-loaded]) .loader {
+  display: none;
+}
